@@ -8,14 +8,18 @@ import { Injectable } from '@nestjs/common';
 export class PrismaUsersRepository implements UsersRepository {
   constructor(private prisma: PrismaService) {}
 
-  // eslint-disable-next-line @typescript-eslint/require-await
-  async findById(id: string): Promise<DomainUser | null> {
-    throw new Error('Method not implemented.');
+  async findById(id: number): Promise<DomainUser | null> {
+    const prismaUser = await this.prisma.user.findUnique({
+      where: { id },
+    });
+    return prismaUser ? this.toDomain(prismaUser) : null;
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async findByEmail(email: string): Promise<DomainUser | null> {
-    throw new Error('Method not implemented.');
+    const prismaUser = await this.prisma.user.findUnique({
+      where: { email },
+    });
+    return prismaUser ? this.toDomain(prismaUser) : null;
   }
 
   async findBySub(sub: string): Promise<DomainUser | null> {
@@ -36,14 +40,27 @@ export class PrismaUsersRepository implements UsersRepository {
     return this.toDomain(createdPrismaUser);
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async update(user: DomainUser): Promise<DomainUser | null> {
-    throw new Error('Method not implemented.');
+    const updatedPrismaUser = await this.prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        email: user.email,
+        passwordHash: user.passwordHash,
+        sub: user.sub,
+      },
+    });
+    return this.toDomain(updatedPrismaUser);
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async delete(user: DomainUser): Promise<boolean> {
-    throw new Error('Method not implemented.');
+    const deletedPrismaUser = await this.prisma.user.delete({
+      where: {
+        id: user.id,
+      },
+    });
+    return deletedPrismaUser ? true : false;
   }
 
   private toDomain(user: PrismaUser): DomainUser {

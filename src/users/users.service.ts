@@ -9,6 +9,14 @@ export class UsersService {
     private readonly usersRepository: UsersRepository,
   ) {}
 
+  async findById(id: number): Promise<User | null> {
+    return await this.usersRepository.findById(id);
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return await this.usersRepository.findByEmail(email);
+  }
+
   async findBySub(sub: string): Promise<User | null> {
     return await this.usersRepository.findBySub(sub);
   }
