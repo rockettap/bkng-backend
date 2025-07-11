@@ -20,3 +20,11 @@ model User {
   passwordHash String?
   sub          String? @unique
 }
+
+model Availability {
+  userId Int
+  from   DateTime
+  to     DateTime
+
+  @@id([userId, from, to])
+}
