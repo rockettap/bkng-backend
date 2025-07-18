@@ -9,11 +9,7 @@ export class AvailabilityService {
     private readonly availabilityRepository: AvailabilityRepository,
   ) {}
 
-  async addAvailability(
-    userId: number,
-    from: Date,
-    to: Date,
-  ): Promise<Availability> {
+  async create(userId: number, from: Date, to: Date): Promise<Availability> {
     const overlapping = await this.availabilityRepository.findManyInRange(
       userId,
       from,
@@ -21,7 +17,7 @@ export class AvailabilityService {
     );
 
     if (overlapping.length > 0) {
-      throw new Error('Availability overlaps with existing time slots.');
+      throw new Error('Availability overlaps with existing availabilities.');
     }
 
     return await this.availabilityRepository.create(

@@ -49,6 +49,7 @@ export class PrismaUsersRepository implements UsersRepository {
         email: user.email,
         passwordHash: user.passwordHash,
         sub: user.sub,
+        stripeId: user.stripeId,
       },
     });
     return this.toDomain(updatedPrismaUser);
@@ -65,9 +66,18 @@ export class PrismaUsersRepository implements UsersRepository {
 
   private toDomain(user: PrismaUser): DomainUser {
     if (user.email && user.passwordHash) {
-      return DomainUser.createWithEmail(user.id, user.email, user.passwordHash);
+      return DomainUser.createWithEmail(
+        user.id,
+        user.email,
+        user.passwordHash,
+        user.stripeId ?? undefined,
+      );
     } else if (user.sub) {
-      return DomainUser.createWithGoogle(user.id, user.sub);
+      return DomainUser.createWithGoogle(
+        user.id,
+        user.sub,
+        user.stripeId ?? undefined,
+      );
     } else {
       throw new Error();
     }

@@ -14,6 +14,6 @@ import { AvailabilityController } from './availability.controller';
     },
   ],
   controllers: [AvailabilityController],
-  exports: [AvailabilityService],
+  exports: [AvailabilityService, 'AvailabilityRepository'],
 })
 export class AvailabilityModule {}

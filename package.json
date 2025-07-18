@@ -36,7 +36,8 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "stripe": "^18.3.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -54,6 +55,7 @@
     "@types/passport-google-oauth20": "^2.0.16",
     "@types/passport-jwt": "^4.0.1",
     "@types/passport-local": "^1.0.38",
+    "@types/stripe": "^8.0.416",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
