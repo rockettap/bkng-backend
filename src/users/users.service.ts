@@ -24,4 +24,12 @@ export class UsersService {
   async create(user: User): Promise<User> {
     return await this.usersRepository.create(user);
   }
+
+  async update(user: User): Promise<User> {
+    return await this.usersRepository.update(user);
+  }
+
+  async delete(user: User): Promise<boolean> {
+    return await this.usersRepository.delete(user);
+  }
 }

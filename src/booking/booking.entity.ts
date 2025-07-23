@@ -30,6 +30,16 @@ export class Booking {
     return this._status;
   }
 
+  get price(): number {
+    const MILLISECONDS_PER_HOUR = 1000 * 60 * 60;
+
+    const durationMs = this.to.getTime() - this.from.getTime();
+    const hours = Math.ceil(durationMs / MILLISECONDS_PER_HOUR);
+    const hourlyRate = 100; // TODO: change to the option associated with the user
+
+    return hours * hourlyRate;
+  }
+
   confirm(): void {
     if (this._status !== BookingStatus.PENDING) {
       throw new Error('Only pending bookings can be confirmed.');

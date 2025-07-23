@@ -40,7 +40,7 @@ export class PrismaUsersRepository implements UsersRepository {
     return this.toDomain(createdPrismaUser);
   }
 
-  async update(user: DomainUser): Promise<DomainUser | null> {
+  async update(user: DomainUser): Promise<DomainUser> {
     const updatedPrismaUser = await this.prisma.user.update({
       where: {
         id: user.id,

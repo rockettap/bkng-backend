@@ -25,18 +25,10 @@ export class AuthService {
         User.createWithGoogle(0, profile.id),
       );
 
-      const payload = { username: 'PLACEHOLDER', sub: newUser.id };
-      return {
-        access_token: this.jwtService.sign(payload),
-        refresh_token: this.jwtService.sign(payload, { expiresIn: '7d' }),
-      };
+      return this.generateTokens(newUser);
     }
 
-    const payload = { username: 'PLACEHOLDER', sub: user.id };
-    return {
-      access_token: this.jwtService.sign(payload),
-      refresh_token: this.jwtService.sign(payload, { expiresIn: '7d' }),
-    };
+    return this.generateTokens(user);
   }
 
   async signUp(
@@ -48,11 +40,7 @@ export class AuthService {
       User.createWithEmail(0, email, passwordHash),
     );
 
-    const payload = { username: 'PLACEHOLDER', sub: user.id };
-    return {
-      access_token: this.jwtService.sign(payload),
-      refresh_token: this.jwtService.sign(payload, { expiresIn: '7d' }),
-    };
+    return this.generateTokens(user);
   }
 
   async signIn(
@@ -63,13 +51,11 @@ export class AuthService {
     const isValid =
       user?.passwordHash && (await bcrypt.compare(password, user.passwordHash));
 
-    if (!isValid) throw new UnauthorizedException();
+    if (!isValid) {
+      throw new UnauthorizedException();
+    }
 
-    const payload = { username: 'PLACEHOLDER', sub: user.id };
-    return {
-      access_token: this.jwtService.sign(payload),
-      refresh_token: this.jwtService.sign(payload, { expiresIn: '7d' }),
-    };
+    return this.generateTokens(user);
   }
 
   async refreshToken(
@@ -84,7 +70,14 @@ export class AuthService {
       throw new ForbiddenException();
     }
 
-    const payload = { username: 'PLACEHOLDER', sub: user.id };
+    return this.generateTokens(user);
+  }
+
+  private generateTokens(user: User): {
+    access_token: string;
+    refresh_token: string;
+  } {
+    const payload = { username: 'TEST_USERNAME', sub: user.id };
     return {
       access_token: this.jwtService.sign(payload),
       refresh_token: this.jwtService.sign(payload, { expiresIn: '7d' }),
