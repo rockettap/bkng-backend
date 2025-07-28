@@ -3,6 +3,7 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { AvailabilityModule } from 'src/availability/availability.module';
 import { UsersModule } from 'src/users/users.module';
 import { PaymentModule } from 'src/payment/payment.module';
+import { GoogleCalendarModule } from 'src/google-calendar/google-calendar.module';
 import { BookingService } from './booking.service';
 import { PrismaBookingRepository } from './booking.repository';
 import { BookingController } from './booking.controller';
@@ -13,6 +14,7 @@ import { BookingController } from './booking.controller';
     AvailabilityModule,
     UsersModule,
     forwardRef(() => PaymentModule),
+    GoogleCalendarModule,
   ],
   providers: [
     BookingService,

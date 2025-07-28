@@ -1,5 +1,4 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { BookingService } from 'src/booking/booking.service';
 import { UsersService } from 'src/users/users.service';
 import { Booking } from 'src/booking/booking.entity';
@@ -9,16 +8,13 @@ import Stripe from 'stripe';
 @Injectable()
 export class StripeService {
   private readonly logger = new Logger(StripeService.name);
-  private readonly stripe: Stripe;
+  private readonly stripe = new Stripe(process.env.STRIPE_SECRET!);
 
   constructor(
-    private readonly configService: ConfigService,
     @Inject(forwardRef(() => BookingService))
     private readonly bookingService: BookingService,
     private readonly usersService: UsersService,
-  ) {
-    this.stripe = new Stripe(this.configService.get<string>('STRIPE_SECRET')!);
-  }
+  ) {}
 
   async createAccountLink(userId: number) {
     const user = await this.usersService.findById(userId);
@@ -40,8 +36,6 @@ export class StripeService {
           },
         },
       });
-
-      this.logger.verbose('user.stripeId is undefined');
 
       user.stripeId = account.id;
       await this.usersService.update(user);
@@ -82,13 +76,16 @@ export class StripeService {
         transfer_data: {
           destination: user.stripeId,
         },
+        metadata: {
+          booking_id: booking.id,
+        },
       },
       metadata: {
         booking_id: booking.id,
       },
       success_url:
-        'https://a5ec7aea8319.ngrok-free.app/booking/success?session_id={CHECKOUT_SESSION_ID}',
-      cancel_url: 'https://a5ec7aea8319.ngrok-free.app/booking/cancel',
+        'http://localhost:3000/booking/success?session_id={CHECKOUT_SESSION_ID}',
+      cancel_url: 'http://localhost:3000/booking/cancel',
     });
 
     return session;
@@ -100,22 +97,58 @@ export class StripeService {
     switch (event.type) {
       case 'checkout.session.completed':
         this.logger.log({
-          'checkout.session.completed': event.data.object.metadata,
+          event: 'checkout.session.completed',
+          metadata: event.data.object.metadata,
         });
 
         await this.bookingService.confirm(
           Number(event.data.object.metadata!.booking_id),
+          event.data.object.customer_email ?? undefined,
         );
         break;
 
       case 'checkout.session.expired':
         this.logger.log({
-          'checkout.session.expired': event.data.object.metadata,
+          event: 'checkout.session.expired',
+          metadata: event.data.object.metadata,
         });
 
         await this.bookingService.cancel(
           Number(event.data.object.metadata!.booking_id),
         );
+        break;
+
+      case 'charge.refunded': {
+        const chargeId = event.data.object.id;
+
+        const charge = await this.stripe.charges.retrieve(chargeId, {
+          expand: ['payment_intent'],
+        });
+
+        const paymentIntent = charge.payment_intent as Stripe.PaymentIntent;
+        const bookingId = paymentIntent.metadata.booking_id;
+
+        this.logger.log({
+          event: 'charge.refunded',
+          metadata: charge.metadata,
+        });
+
+        await this.bookingService.refund(Number(bookingId));
+        break;
+      }
+
+      case 'charge.dispute.created':
+        this.logger.warn({
+          event: 'charge.dispute.created',
+        });
+
+        break;
+
+      case 'charge.dispute.closed':
+        this.logger.warn({
+          event: 'charge.dispute.closed',
+        });
+
         break;
 
       default:
@@ -127,7 +160,7 @@ export class StripeService {
     return this.stripe.webhooks.constructEvent(
       rawBody,
       signature,
-      this.configService.get('STRIPE_WEBHOOK_SECRET')!,
+      process.env.STRIPE_WEBHOOK_SECRET!,
     );
   }
 }

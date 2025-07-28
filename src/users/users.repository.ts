@@ -50,6 +50,8 @@ export class PrismaUsersRepository implements UsersRepository {
         passwordHash: user.passwordHash,
         sub: user.sub,
         stripeId: user.stripeId,
+        googleAccessToken: user.googleAccessToken,
+        googleRefreshToken: user.googleRefreshToken,
       },
     });
     return this.toDomain(updatedPrismaUser);
@@ -77,6 +79,8 @@ export class PrismaUsersRepository implements UsersRepository {
         user.id,
         user.sub,
         user.stripeId ?? undefined,
+        user.googleAccessToken ?? undefined,
+        user.googleRefreshToken ?? undefined,
       );
     } else {
       throw new Error();

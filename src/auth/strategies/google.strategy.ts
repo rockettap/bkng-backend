@@ -22,8 +22,8 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     refreshToken: string,
     profile: Profile,
   ): Promise<{ access_token: string; refresh_token: string }> {
-    this.logger.log(profile._json);
-    this.logger.debug({ accessToken, refreshToken });
+    this.logger.log({ message: 'profile', profile: profile._json });
+    this.logger.debug({ message: 'tokens', accessToken, refreshToken });
 
     return await this.authService.validateGoogleLogin(profile);
   }

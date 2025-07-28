@@ -5,6 +5,7 @@ import { UsersModule } from './users/users.module';
 import { AvailabilityModule } from './availability/availability.module';
 import { BookingModule } from './booking/booking.module';
 import { PaymentModule } from './payment/payment.module';
+import { GoogleCalendarModule } from './google-calendar/google-calendar.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { PaymentModule } from './payment/payment.module';
     AvailabilityModule,
     BookingModule,
     PaymentModule,
+    GoogleCalendarModule,
   ],
 })
 export class AppModule {}

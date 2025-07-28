@@ -35,7 +35,7 @@ export class Booking {
 
     const durationMs = this.to.getTime() - this.from.getTime();
     const hours = Math.ceil(durationMs / MILLISECONDS_PER_HOUR);
-    const hourlyRate = 100; // TODO: change to the option associated with the user
+    const hourlyRate = 100000; // TODO: change to the option associated with the user
 
     return hours * hourlyRate;
   }

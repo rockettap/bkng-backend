@@ -7,7 +7,7 @@ export class BookingController {
 
   @Post()
   async addBooking(@Body() body: { userId: number; from: string; to: string }) {
-    if (!body.userId || !body.from || !body.to) {
+    if (typeof body.userId !== 'number' || !body.from || !body.to) {
       throw new BadRequestException();
     }
 
@@ -18,8 +18,15 @@ export class BookingController {
       throw new BadRequestException();
     }
 
-    const url = await this.bookingService.create(body.userId, from, to);
+    try {
+      const url = await this.bookingService.create(body.userId, from, to);
 
-    return { url };
+      return { url };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    }
   }
 }

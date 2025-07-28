@@ -1,13 +1,16 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { AvailabilityRepository } from 'src/availability/availability-repository.interface';
 import { UsersService } from 'src/users/users.service';
 import { StripeService } from 'src/payment/stripe/stripe.service';
 import { BookingRepository } from './booking-repository.interface';
+import { GoogleCalendarService } from 'src/google-calendar/google-calendar.service';
 import { Booking } from './booking.entity';
 import { BookingStatus } from './booking-status.enum';
 
 @Injectable()
 export class BookingService {
+  private readonly logger = new Logger(BookingService.name);
+
   constructor(
     @Inject('AvailabilityRepository')
     private readonly availabilityRepository: AvailabilityRepository,
@@ -16,12 +19,21 @@ export class BookingService {
     private readonly stripeService: StripeService,
     @Inject('BookingRepository')
     private readonly bookingRepository: BookingRepository,
+    private readonly googleCalendarService: GoogleCalendarService,
   ) {}
 
-  async create(userId: number, from: Date, to: Date): Promise<string> {
+  async create(
+    userId: number,
+    from: Date,
+    to: Date,
+  ): Promise<string | undefined> {
     const user = await this.usersService.findById(userId);
     if (!user || !user.stripeId) {
       throw new Error(`User with ID ${userId} not found.`);
+    }
+
+    if (from.getTime() < Date.now() + 300_000) {
+      throw new Error('Bookings must be at least 5 minutes in advance.');
     }
 
     const availabilityOverlapping =
@@ -48,24 +60,62 @@ export class BookingService {
       new Booking(0, userId, from, to),
     );
 
-    const session = await this.stripeService.createCheckoutSession(
-      booking,
-      user,
-    );
+    try {
+      const session = await this.stripeService.createCheckoutSession(
+        booking,
+        user,
+      );
 
-    booking.stripeSessionId = session.id;
-    await this.bookingRepository.update(booking);
+      booking.stripeSessionId = session.id;
+      await this.bookingRepository.update(booking);
 
-    return session.url!;
+      return session.url!;
+    } catch (error) {
+      booking.cancel();
+      await this.bookingRepository.update(booking);
+
+      if (error instanceof Error) {
+        throw error;
+      }
+    }
   }
 
-  async confirm(bookingId: number) {
+  async confirm(bookingId: number, email?: string) {
     const booking = await this.bookingRepository.findById(bookingId);
     if (!booking) {
       throw new Error(`Booking with ID '${bookingId}' not found.`);
     }
 
     booking.confirm();
+
+    const user = await this.usersService.findById(booking.userId);
+    if (!user) {
+      throw new Error(`User with ID ${booking.userId} not found.`);
+    }
+
+    // TEMP: extract from user!
+    user.googleAccessToken =
+      'ya29.a0AS3H6NwX9xCEFOGNrUEDaX5dJRg9C-m16LCcDwqZhJ8rdIvZibGxtXT54hMzHV4MaBPu2Bd1JkV-M9oas_75kAqMiiD9hkDB5zBx4j42z-X9rSoBL0Y14NSgWri-dNXKbFcOwPIdIFvYkltsEukXH-MR9nShjqIQjcWz3NfgaCgYKAbUSARcSFQHGX2MiW3NsYBII97U-AUMrOi6hqw0175';
+    user.googleRefreshToken =
+      '1//09S4QItryNlgHCgYIARAAGAkSNwF-L9Ircu9uudLyIM6TUfXhZ6ZT2Q_AOmNDrCBHmgRJV96nIUDghEZ5o7eSyayQif_ks7n8Nw8';
+
+    if (!user.googleAccessToken || !user.googleRefreshToken) {
+      this.logger.warn({
+        message:
+          'User has probably not associated their account with Google Calendar.',
+      });
+    } else {
+      await this.googleCalendarService.createGoogleCalendarEvent(
+        {
+          access_token: user.googleAccessToken,
+          refresh_token: user.googleRefreshToken,
+        },
+        booking.id,
+        booking.from,
+        booking.to,
+        email,
+      );
+    }
 
     await this.bookingRepository.update(booking);
   }
@@ -77,6 +127,17 @@ export class BookingService {
     }
 
     booking.cancel();
+
+    await this.bookingRepository.update(booking);
+  }
+
+  async refund(bookingId: number) {
+    const booking = await this.bookingRepository.findById(bookingId);
+    if (!booking) {
+      throw new Error(`Booking with ID '${bookingId}' not found.`);
+    }
+
+    booking.refund();
 
     await this.bookingRepository.update(booking);
   }

@@ -5,6 +5,8 @@ export class User {
     private _passwordHash?: string,
     private _sub?: string,
     public stripeId?: string,
+    public googleAccessToken?: string,
+    public googleRefreshToken?: string,
   ) {}
 
   get email(): string | undefined {
@@ -31,8 +33,22 @@ export class User {
     return new User(id, email, passwordHash, undefined, stripeId);
   }
 
-  static createWithGoogle(id: number, sub: string, stripeId?: string): User {
-    return new User(id, undefined, undefined, sub, stripeId);
+  static createWithGoogle(
+    id: number,
+    sub: string,
+    stripeId?: string,
+    googleAccessToken?: string,
+    googleRefreshToken?: string,
+  ): User {
+    return new User(
+      id,
+      undefined,
+      undefined,
+      sub,
+      stripeId,
+      googleAccessToken,
+      googleRefreshToken,
+    );
   }
 
   toJSON(): object {

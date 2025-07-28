@@ -12,16 +12,10 @@ import {
 import { Request, Response } from 'express';
 import { GoogleAuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
-import { BookingService } from 'src/booking/booking.service';
-import { UsersService } from 'src/users/users.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly bookingService: BookingService,
-    private readonly usersService: UsersService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Get('google')
   @UseGuards(GoogleAuthGuard)
