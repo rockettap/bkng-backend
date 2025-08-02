@@ -101,9 +101,13 @@ export class StripeService {
           metadata: event.data.object.metadata,
         });
 
+        this.logger.log({
+          email: event.data.object.customer_details?.email,
+        });
+
         await this.bookingService.confirm(
           Number(event.data.object.metadata!.booking_id),
-          event.data.object.customer_email ?? undefined,
+          event.data.object.customer_details?.email ?? undefined,
         );
         break;
 

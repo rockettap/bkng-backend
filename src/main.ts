@@ -1,8 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as cookieParser from 'cookie-parser';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { ReminderService } from './booking/reminder/reminder.service';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -47,6 +48,17 @@ async function bootstrap() {
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
+
+  // const reminderService = app.get(ReminderService);
+
+  // await reminderService.scheduleReminder(
+  //   {
+  //     from: new Date('2025-08-01T09:06:00Z'),
+  //     to: new Date('2025-08-01T09:59:59Z'),
+  //     userEmail: 'sanya386058@gmail.com',
+  //   },
+  //   1,
+  // );
 
   await app.listen(process.env.PORT ?? 3000);
 }

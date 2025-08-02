@@ -38,7 +38,7 @@ export class AvailabilityController {
       await this.availabilityService.create(req.user.userId, from, to);
     } catch (error) {
       if (error instanceof Error) {
-        throw new BadRequestException();
+        throw new BadRequestException(error.message);
       }
       throw error;
     }

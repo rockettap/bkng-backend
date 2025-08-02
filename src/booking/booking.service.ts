@@ -6,6 +6,7 @@ import { BookingRepository } from './booking-repository.interface';
 import { GoogleCalendarService } from 'src/google-calendar/google-calendar.service';
 import { Booking } from './booking.entity';
 import { BookingStatus } from './booking-status.enum';
+import { ReminderService } from './reminder/reminder.service';
 
 @Injectable()
 export class BookingService {
@@ -20,6 +21,7 @@ export class BookingService {
     @Inject('BookingRepository')
     private readonly bookingRepository: BookingRepository,
     private readonly googleCalendarService: GoogleCalendarService,
+    private readonly reminderService: ReminderService,
   ) {}
 
   async create(
@@ -32,7 +34,9 @@ export class BookingService {
       throw new Error(`User with ID ${userId} not found.`);
     }
 
-    if (from.getTime() < Date.now() + 300_000) {
+    const MINIMUM_ADVANCE_TIME_MS = 5 * 60 * 1000;
+
+    if (from.getTime() < Date.now() + MINIMUM_ADVANCE_TIME_MS) {
       throw new Error('Bookings must be at least 5 minutes in advance.');
     }
 
@@ -93,7 +97,7 @@ export class BookingService {
       throw new Error(`User with ID ${booking.userId} not found.`);
     }
 
-    // TEMP: extract from user!
+    // TEMP: we must extract from user
     user.googleAccessToken =
       'ya29.a0AS3H6NwX9xCEFOGNrUEDaX5dJRg9C-m16LCcDwqZhJ8rdIvZibGxtXT54hMzHV4MaBPu2Bd1JkV-M9oas_75kAqMiiD9hkDB5zBx4j42z-X9rSoBL0Y14NSgWri-dNXKbFcOwPIdIFvYkltsEukXH-MR9nShjqIQjcWz3NfgaCgYKAbUSARcSFQHGX2MiW3NsYBII97U-AUMrOi6hqw0175';
     user.googleRefreshToken =
@@ -118,6 +122,21 @@ export class BookingService {
     }
 
     await this.bookingRepository.update(booking);
+
+    // Send a notification
+    const REMINDER_OFFSET_MS = 5 * 60 * 1000;
+    const msUntilStart = booking.msUntilStart() - REMINDER_OFFSET_MS;
+
+    if (msUntilStart <= 0 || !email) return;
+
+    await this.reminderService.scheduleReminder(
+      {
+        userEmail: email,
+        from: booking.from,
+        to: booking.to,
+      },
+      msUntilStart,
+    );
   }
 
   async cancel(bookingId: number) {
