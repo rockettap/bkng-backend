@@ -21,10 +21,6 @@ export class Availability {
     );
   }
 
-  overlapsWith(other: Availability): boolean {
-    return this.from < other.to && this.to > other.from;
-  }
-
   toJSON(): object {
     return {
       from: this.from,

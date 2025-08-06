@@ -12,6 +12,7 @@ import {
 import { Request, Response } from 'express';
 import { StripeService } from './stripe/stripe.service';
 import { JwtAuthGuard } from 'src/auth/auth.guard';
+import { JwtPayload } from 'src/auth/types/jwt-payload.type';
 
 @Controller('payment')
 export class PaymentController {
@@ -40,9 +41,9 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard)
   async connectStripe(
     @Req()
-    req: Request & { user: { username: string; userId: number } },
+    req: Request & { user: JwtPayload },
   ) {
-    const url = await this.stripeService.createAccountLink(req.user.userId);
+    const url = await this.stripeService.createAccountLink(req.user.sub);
 
     return { url };
   }

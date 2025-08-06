@@ -12,6 +12,7 @@ import { JwtAuthGuard } from 'src/auth/auth.guard';
 import { AvailabilityService } from './availability.service';
 import { Request } from 'express';
 import { Availability } from './availability.entity';
+import { JwtPayload } from 'src/auth/types/jwt-payload.type';
 
 @Controller('availability')
 export class AvailabilityController {
@@ -21,7 +22,7 @@ export class AvailabilityController {
   @UseGuards(JwtAuthGuard)
   async addAvailability(
     @Body() body: { from: string; to: string },
-    @Req() req: Request & { user: { userId: number; username: string } },
+    @Req() req: Request & { user: JwtPayload },
   ): Promise<void> {
     if (!body.from || !body.to) {
       throw new BadRequestException();
@@ -35,7 +36,7 @@ export class AvailabilityController {
     }
 
     try {
-      await this.availabilityService.create(req.user.userId, from, to);
+      await this.availabilityService.create(req.user.sub, from, to);
     } catch (error) {
       if (error instanceof Error) {
         throw new BadRequestException(error.message);

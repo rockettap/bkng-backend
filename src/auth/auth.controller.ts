@@ -10,8 +10,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { GoogleAuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
+import { GoogleAuthGuard } from './auth.guard';
+import { JwtTokens } from './types/jwt-tokens.type';
 
 @Controller('auth')
 export class AuthController {
@@ -25,7 +26,7 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   handleGoogleCallback(
     @Req()
-    req: Request & { user: { access_token: string; refresh_token: string } },
+    req: Request & { user: JwtTokens },
     @Res({ passthrough: true }) res: Response,
   ) {
     const { access_token, refresh_token } = req.user;

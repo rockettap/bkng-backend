@@ -4,9 +4,9 @@ import { UsersService } from 'src/users/users.service';
 import { StripeService } from 'src/payment/stripe/stripe.service';
 import { BookingRepository } from './booking-repository.interface';
 import { GoogleCalendarService } from 'src/google-calendar/google-calendar.service';
+import { ReminderService } from './reminder/reminder.service';
 import { Booking } from './booking.entity';
 import { BookingStatus } from './booking-status.enum';
-import { ReminderService } from './reminder/reminder.service';
 
 @Injectable()
 export class BookingService {
@@ -34,7 +34,7 @@ export class BookingService {
       throw new Error(`User with ID ${userId} not found.`);
     }
 
-    const MINIMUM_ADVANCE_TIME_MS = 5 * 60 * 1000;
+    const MINIMUM_ADVANCE_TIME_MS = 5 * 60 * 1000; // 5 minutes
 
     if (from.getTime() < Date.now() + MINIMUM_ADVANCE_TIME_MS) {
       throw new Error('Bookings must be at least 5 minutes in advance.');
@@ -97,12 +97,6 @@ export class BookingService {
       throw new Error(`User with ID ${booking.userId} not found.`);
     }
 
-    // TEMP: we must extract from user
-    user.googleAccessToken =
-      'ya29.a0AS3H6NwX9xCEFOGNrUEDaX5dJRg9C-m16LCcDwqZhJ8rdIvZibGxtXT54hMzHV4MaBPu2Bd1JkV-M9oas_75kAqMiiD9hkDB5zBx4j42z-X9rSoBL0Y14NSgWri-dNXKbFcOwPIdIFvYkltsEukXH-MR9nShjqIQjcWz3NfgaCgYKAbUSARcSFQHGX2MiW3NsYBII97U-AUMrOi6hqw0175';
-    user.googleRefreshToken =
-      '1//09S4QItryNlgHCgYIARAAGAkSNwF-L9Ircu9uudLyIM6TUfXhZ6ZT2Q_AOmNDrCBHmgRJV96nIUDghEZ5o7eSyayQif_ks7n8Nw8';
-
     if (!user.googleAccessToken || !user.googleRefreshToken) {
       this.logger.warn({
         message:
@@ -124,7 +118,7 @@ export class BookingService {
     await this.bookingRepository.update(booking);
 
     // Send a notification
-    const REMINDER_OFFSET_MS = 5 * 60 * 1000;
+    const REMINDER_OFFSET_MS = 5 * 60 * 1000; // 5 minutes
     const msUntilStart = booking.msUntilStart() - REMINDER_OFFSET_MS;
 
     if (msUntilStart <= 0 || !email) return;

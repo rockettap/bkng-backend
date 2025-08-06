@@ -2,7 +2,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { ReminderService } from './booking/reminder/reminder.service';
 import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
@@ -12,34 +11,34 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
-  const expressApp = app.getHttpAdapter().getInstance();
+  // const expressApp = app.getHttpAdapter().getInstance();
 
-  expressApp.get('/', (req, res) => {
-    const html = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>bkng Landing</title>
-        <!-- Google tag (gtag.js) -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZPX5VZYVGB"></script>
-        <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
+  // expressApp.get('/', (req, res) => {
+  //   const html = `
+  //     <!DOCTYPE html>
+  //     <html lang="en">
+  //     <head>
+  //       <meta charset="UTF-8" />
+  //       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  //       <title>bkng Landing</title>
+  //       <!-- Google tag (gtag.js) -->
+  //       <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZPX5VZYVGB"></script>
+  //       <script>
+  //         window.dataLayer = window.dataLayer || [];
+  //         function gtag(){dataLayer.push(arguments);}
+  //         gtag('js', new Date());
 
-          gtag('config', 'G-ZPX5VZYVGB');
-        </script>
-      </head>
-      <body>
-        <h1>📘 Welcome to bkng</h1>
-        <p>This is a basic landing page with Google Analytics tracking.</p>
-      </body>
-      </html>
-    `;
-    res.type('html').send(html);
-  });
+  //         gtag('config', 'G-ZPX5VZYVGB');
+  //       </script>
+  //     </head>
+  //     <body>
+  //       <h1>📘 Welcome to bkng</h1>
+  //       <p>This is a basic landing page with Google Analytics tracking.</p>
+  //     </body>
+  //     </html>
+  //   `;
+  //   res.type('html').send(html);
+  // });
 
   const config = new DocumentBuilder()
     .setTitle('bkng')
@@ -48,17 +47,6 @@ async function bootstrap() {
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
-
-  // const reminderService = app.get(ReminderService);
-
-  // await reminderService.scheduleReminder(
-  //   {
-  //     from: new Date('2025-08-01T09:06:00Z'),
-  //     to: new Date('2025-08-01T09:59:59Z'),
-  //     userEmail: 'sanya386058@gmail.com',
-  //   },
-  //   1,
-  // );
 
   await app.listen(process.env.PORT ?? 3000);
 }

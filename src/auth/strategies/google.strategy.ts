@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, Profile } from 'passport-google-oauth20';
 import { AuthService } from '../auth.service';
+import { JwtTokens } from '../types/jwt-tokens.type';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
@@ -9,11 +10,10 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
 
   constructor(private readonly authService: AuthService) {
     super({
-      clientID:
-        '52484676792-9k82hboi7a3ijhjpqh4tvta2m5i5tnmr.apps.googleusercontent.com',
-      clientSecret: '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',
-      callbackURL: 'http://localhost:3000/auth/google/callback',
-      scope: ['profile'],
+      clientID: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      callbackURL: process.env.GOOGLE_PROFILE_REDIRECT_URI!,
+      scope: ['https://www.googleapis.com/auth/userinfo.profile'],
     });
   }
 
@@ -21,7 +21,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     accessToken: string,
     refreshToken: string,
     profile: Profile,
-  ): Promise<{ access_token: string; refresh_token: string }> {
+  ): Promise<JwtTokens> {
     this.logger.log({ message: 'profile', profile: profile._json });
     this.logger.debug({ message: 'tokens', accessToken, refreshToken });
 
