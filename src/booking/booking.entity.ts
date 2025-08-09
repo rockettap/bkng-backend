@@ -6,9 +6,16 @@ export class Booking {
     public readonly userId: number,
     public readonly from: Date,
     public readonly to: Date,
+    public readonly pricePerHour: number,
     private _status: BookingStatus = BookingStatus.PENDING,
     public stripeSessionId?: string,
   ) {
+    const MINIMUM_ADVANCE_TIME_MS = 5 * 60 * 1000; // 5 minutes
+
+    if (from.getTime() < Date.now() + MINIMUM_ADVANCE_TIME_MS) {
+      throw new Error('Bookings must be at least 5 minutes in advance.');
+    }
+
     if (from >= to) {
       throw new Error("The 'from' date must be earlier than the 'to' date.");
     }
@@ -31,13 +38,13 @@ export class Booking {
   }
 
   get price(): number {
-    const MILLISECONDS_PER_HOUR = 1000 * 60 * 60;
+    const MILLISECONDS_PER_15_MIN = 1000 * 60 * 15;
 
     const durationMs = this.to.getTime() - this.from.getTime();
-    const hours = Math.ceil(durationMs / MILLISECONDS_PER_HOUR);
-    const hourlyRate = 100_000; // TODO: change to the option associated with the user
+    const blocks = Math.ceil(durationMs / MILLISECONDS_PER_15_MIN);
+    const hours = blocks * 0.25;
 
-    return hours * hourlyRate;
+    return hours * this.pricePerHour;
   }
 
   msUntilStart = (): number => Math.max(this.from.getTime() - Date.now(), 0);

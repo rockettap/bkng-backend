@@ -12,6 +12,11 @@ model User {
   id                 Int     @id @default(autoincrement())
   email              String? @unique
   passwordHash       String?
+
+  firstName          String?
+  familyName         String?
+  avatarUrl          String?
+
   sub                String? @unique
   stripeId           String? @unique
   googleAccessToken  String?
@@ -19,9 +24,10 @@ model User {
 }
 
 model Availability {
-  userId Int
-  from   DateTime
-  to     DateTime
+  userId       Int
+  from         DateTime
+  to           DateTime
+  pricePerHour Int         @default(1)
 
   @@id([userId, from, to])
 }
@@ -38,6 +44,7 @@ model Booking {
   userId          Int
   from            DateTime
   to              DateTime
+  pricePerHour    Int           @default(1)
   status          BookingStatus
   stripeSessionId String?       @unique
 }

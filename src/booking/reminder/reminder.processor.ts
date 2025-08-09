@@ -1,11 +1,7 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import * as handlebars from 'handlebars';
-
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { MailService } from 'src/mail/mail.service';
 import { Job } from 'bullmq';
+import { MailService } from 'src/mail/mail.service';
 import { ReminderJob } from './reminder-job.interface';
 
 @Processor('booking-reminder')
@@ -21,7 +17,7 @@ export class ReminderConsumer extends WorkerHost {
 
     this.logger.debug(job.data);
 
-    const html = this.renderTemplate('mail', {
+    const html = this.mailService.renderTemplate('reminder-mail', {
       from: this.formatDate(new Date(from)),
       to: this.formatDate(new Date(to)),
     });
@@ -36,19 +32,6 @@ export class ReminderConsumer extends WorkerHost {
     }
 
     return {};
-  }
-
-  private renderTemplate(templateName: string, data: any): string {
-    const templatePath = path.join(
-      process.cwd(),
-      'templates',
-      `${templateName}.hbs`,
-    );
-    const templateSource = fs.readFileSync(templatePath, 'utf8');
-
-    const template = handlebars.compile(templateSource);
-
-    return template(data);
   }
 
   private formatDate(date: Date): string {

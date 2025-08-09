@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { UsersService } from 'src/users/users.service';
-import { google } from 'googleapis';
-import { JwtTokens } from 'src/auth/types/jwt-tokens.type';
 import { JwtService } from '@nestjs/jwt';
+import { google } from 'googleapis';
 import { JwtPayload } from 'src/auth/types/jwt-payload.type';
+import { JwtTokens } from 'src/auth/types/jwt-tokens.type';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class GoogleCalendarService {

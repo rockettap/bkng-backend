@@ -7,10 +7,10 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { GoogleCalendarService } from './google-calendar.service';
 import { Request, Response } from 'express';
 import { JwtAuthGuard } from 'src/auth/auth.guard';
 import { JwtPayload } from 'src/auth/types/jwt-payload.type';
+import { GoogleCalendarService } from './google-calendar.service';
 
 @Controller('google-calendar')
 export class GoogleCalendarController {

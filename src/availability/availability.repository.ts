@@ -1,8 +1,8 @@
-import { PrismaService } from 'src/prisma/prisma.service';
-import { Availability as DomainAvailability } from './availability.entity';
-import { Availability as PrismaAvailability } from 'generated/prisma';
 import { Injectable } from '@nestjs/common';
+import { Availability as PrismaAvailability } from 'generated/prisma';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { AvailabilityRepository } from './availability-repository.interface';
+import { Availability as DomainAvailability } from './availability.entity';
 
 @Injectable()
 export class PrismaAvailabilityRepository implements AvailabilityRepository {
@@ -56,6 +56,7 @@ export class PrismaAvailabilityRepository implements AvailabilityRepository {
         userId: availability.userId,
         from: availability.from,
         to: availability.to,
+        pricePerHour: availability.pricePerHour,
       },
     });
     return this.toDomain(createdAvailability);
@@ -79,6 +80,7 @@ export class PrismaAvailabilityRepository implements AvailabilityRepository {
       availability.userId,
       availability.from,
       availability.to,
+      availability.pricePerHour,
     );
   }
 }

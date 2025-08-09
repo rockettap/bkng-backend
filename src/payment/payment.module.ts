@@ -1,9 +1,9 @@
-import { ConfigModule } from '@nestjs/config';
 import { forwardRef, Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { BookingModule } from 'src/booking/booking.module';
 import { UsersModule } from 'src/users/users.module';
-import { StripeService } from './stripe/stripe.service';
 import { PaymentController } from './payment.controller';
+import { StripeService } from './stripe/stripe.service';
 
 @Module({
   imports: [ConfigModule, forwardRef(() => BookingModule), UsersModule],

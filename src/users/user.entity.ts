@@ -1,50 +1,68 @@
+import { Email } from './value-objects/email.vo';
+import { Profile } from './value-objects/profile.vo';
+
 export class User {
   private constructor(
     public readonly id: number,
-    private _email?: string,
+    private _profile: Profile,
+    private _email?: Email,
     private _passwordHash?: string,
-    private _sub?: string,
+    private _googleId?: string,
     public stripeId?: string,
     public googleAccessToken?: string,
     public googleRefreshToken?: string,
   ) {}
 
+  get profile(): Profile {
+    return this._profile;
+  }
+
   get email(): string | undefined {
-    return this._email;
+    return this._email?.value;
   }
 
   get passwordHash(): string | undefined {
     return this._passwordHash;
   }
 
-  get sub(): string | undefined {
-    return this._sub;
+  get googleId(): string | undefined {
+    return this._googleId;
   }
 
   static createWithEmail(
     id: number,
     email: string,
     passwordHash: string,
+    firstName?: string,
+    familyName?: string,
     stripeId?: string,
   ): User {
-    if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
-      throw new Error();
-    }
-    return new User(id, email, passwordHash, undefined, stripeId);
+    return new User(
+      id,
+      new Profile(firstName, familyName),
+      new Email(email),
+      passwordHash,
+      undefined,
+      stripeId,
+    );
   }
 
   static createWithGoogle(
     id: number,
-    sub: string,
+    googleId: string,
+    firstName?: string,
+    familyName?: string,
+    avatarUrl?: string,
     stripeId?: string,
     googleAccessToken?: string,
     googleRefreshToken?: string,
   ): User {
     return new User(
       id,
+      new Profile(firstName, familyName, avatarUrl),
       undefined,
       undefined,
-      sub,
+      googleId,
       stripeId,
       googleAccessToken,
       googleRefreshToken,
@@ -54,6 +72,7 @@ export class User {
   toJSON(): object {
     return {
       id: this.id,
+      profile: this.profile,
     };
   }
 }

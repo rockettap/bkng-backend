@@ -1,8 +1,8 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
-import { BookingService } from 'src/booking/booking.service';
-import { UsersService } from 'src/users/users.service';
 import { Booking } from 'src/booking/booking.entity';
+import { BookingService } from 'src/booking/booking.service';
 import { User } from 'src/users/user.entity';
+import { UsersService } from 'src/users/users.service';
 import Stripe from 'stripe';
 
 @Injectable()

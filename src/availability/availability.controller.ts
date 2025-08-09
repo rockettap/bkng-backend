@@ -8,11 +8,11 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/auth.guard';
-import { AvailabilityService } from './availability.service';
 import { Request } from 'express';
-import { Availability } from './availability.entity';
+import { JwtAuthGuard } from 'src/auth/auth.guard';
 import { JwtPayload } from 'src/auth/types/jwt-payload.type';
+import { Availability } from './availability.entity';
+import { AvailabilityService } from './availability.service';
 
 @Controller('availability')
 export class AvailabilityController {
@@ -21,10 +21,10 @@ export class AvailabilityController {
   @Post()
   @UseGuards(JwtAuthGuard)
   async addAvailability(
-    @Body() body: { from: string; to: string },
+    @Body() body: { from: string; to: string; pricePerHour: number },
     @Req() req: Request & { user: JwtPayload },
   ): Promise<void> {
-    if (!body.from || !body.to) {
+    if (!body.from || !body.to || !body.pricePerHour) {
       throw new BadRequestException();
     }
 
@@ -36,7 +36,12 @@ export class AvailabilityController {
     }
 
     try {
-      await this.availabilityService.create(req.user.sub, from, to);
+      await this.availabilityService.create(
+        req.user.sub,
+        from,
+        to,
+        body.pricePerHour,
+      );
     } catch (error) {
       if (error instanceof Error) {
         throw new BadRequestException(error.message);

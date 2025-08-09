@@ -1,8 +1,8 @@
+import { Injectable } from '@nestjs/common';
+import { User as PrismaUser } from 'generated/prisma';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { User as DomainUser } from './user.entity';
-import { User as PrismaUser } from 'generated/prisma';
 import { UsersRepository } from './users-repository.interface';
-import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class PrismaUsersRepository implements UsersRepository {
@@ -34,7 +34,10 @@ export class PrismaUsersRepository implements UsersRepository {
       data: {
         email: user.email,
         passwordHash: user.passwordHash,
-        sub: user.sub,
+        sub: user.googleId,
+        firstName: user.profile.firstName,
+        familyName: user.profile.familyName,
+        avatarUrl: user.profile.avatarUrl,
       },
     });
     return this.toDomain(createdPrismaUser);
@@ -48,7 +51,10 @@ export class PrismaUsersRepository implements UsersRepository {
       data: {
         email: user.email,
         passwordHash: user.passwordHash,
-        sub: user.sub,
+        sub: user.googleId,
+        firstName: user.profile.firstName,
+        familyName: user.profile.familyName,
+        avatarUrl: user.profile.avatarUrl,
         stripeId: user.stripeId,
         googleAccessToken: user.googleAccessToken,
         googleRefreshToken: user.googleRefreshToken,
@@ -72,12 +78,17 @@ export class PrismaUsersRepository implements UsersRepository {
         user.id,
         user.email,
         user.passwordHash,
+        user.firstName ?? undefined,
+        user.familyName ?? undefined,
         user.stripeId ?? undefined,
       );
     } else if (user.sub) {
       return DomainUser.createWithGoogle(
         user.id,
         user.sub,
+        user.firstName ?? undefined,
+        user.familyName ?? undefined,
+        user.avatarUrl ?? undefined,
         user.stripeId ?? undefined,
         user.googleAccessToken ?? undefined,
         user.googleRefreshToken ?? undefined,

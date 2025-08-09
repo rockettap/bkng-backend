@@ -5,13 +5,14 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Query,
   Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './auth.guard';
+import { AuthService } from './auth.service';
 import { JwtTokens } from './types/jwt-tokens.type';
 
 @Controller('auth')
@@ -42,13 +43,30 @@ export class AuthController {
 
   @Post('register')
   async signUp(
-    @Body() body: { email: string; password: string },
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<{ access_token: string }> {
-    const { access_token, refresh_token } = await this.authService.signUp(
+    @Body()
+    body: {
+      email: string;
+      password: string;
+      firstName: string;
+      familyName: string;
+    },
+  ) {
+    await this.authService.sendEmailConfirmation(
       body.email,
       body.password,
+      body.firstName,
+      body.familyName,
     );
+  }
+
+  @Get('verify')
+  @HttpCode(HttpStatus.OK)
+  async verify(
+    @Query('token') token: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ access_token: string }> {
+    const { access_token, refresh_token } =
+      await this.authService.verify(token);
 
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,

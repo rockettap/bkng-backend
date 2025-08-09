@@ -10,9 +10,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { StripeService } from './stripe/stripe.service';
 import { JwtAuthGuard } from 'src/auth/auth.guard';
 import { JwtPayload } from 'src/auth/types/jwt-payload.type';
+import { StripeService } from './stripe/stripe.service';
 
 @Controller('payment')
 export class PaymentController {

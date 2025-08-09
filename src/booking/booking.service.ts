@@ -1,12 +1,12 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { AvailabilityRepository } from 'src/availability/availability-repository.interface';
-import { UsersService } from 'src/users/users.service';
-import { StripeService } from 'src/payment/stripe/stripe.service';
-import { BookingRepository } from './booking-repository.interface';
 import { GoogleCalendarService } from 'src/google-calendar/google-calendar.service';
-import { ReminderService } from './reminder/reminder.service';
-import { Booking } from './booking.entity';
+import { StripeService } from 'src/payment/stripe/stripe.service';
+import { UsersService } from 'src/users/users.service';
+import { BookingRepository } from './booking-repository.interface';
 import { BookingStatus } from './booking-status.enum';
+import { Booking } from './booking.entity';
+import { ReminderService } from './reminder/reminder.service';
 
 @Injectable()
 export class BookingService {
@@ -34,12 +34,6 @@ export class BookingService {
       throw new Error(`User with ID ${userId} not found.`);
     }
 
-    const MINIMUM_ADVANCE_TIME_MS = 5 * 60 * 1000; // 5 minutes
-
-    if (from.getTime() < Date.now() + MINIMUM_ADVANCE_TIME_MS) {
-      throw new Error('Bookings must be at least 5 minutes in advance.');
-    }
-
     const availabilityOverlapping =
       await this.availabilityRepository.findManyInRange(userId, from, to);
     if (availabilityOverlapping.length !== 1) {
@@ -56,12 +50,8 @@ export class BookingService {
       throw new Error('Booking overlaps with existing bookings.');
     }
 
-    // We should also implement specific user rules, such as a time window before booking.
-    // For example, if the user books a time at 12:15 for a slot at 12:20,
-    // it should be allowed if the difference option is >= 5 minutes
-
     const booking = await this.bookingRepository.create(
-      new Booking(0, userId, from, to),
+      new Booking(0, userId, from, to, availabilityOverlapping[0].pricePerHour),
     );
 
     try {

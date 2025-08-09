@@ -15,7 +15,12 @@ export class AvailabilityService {
     private readonly availabilityRepository: AvailabilityRepository,
   ) {}
 
-  async create(userId: number, from: Date, to: Date): Promise<Availability> {
+  async create(
+    userId: number,
+    from: Date,
+    to: Date,
+    pricePerHour: number,
+  ): Promise<Availability> {
     const overlapping = await this.availabilityRepository.findManyInRange(
       userId,
       from,
@@ -31,7 +36,7 @@ export class AvailabilityService {
     }
 
     return await this.availabilityRepository.create(
-      new Availability(userId, from, to),
+      new Availability(userId, from, to, pricePerHour),
     );
   }
 

@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from 'src/prisma/prisma.module';
-import { AvailabilityService } from './availability.service';
-import { PrismaAvailabilityRepository } from './availability.repository';
 import { AvailabilityController } from './availability.controller';
+import { PrismaAvailabilityRepository } from './availability.repository';
+import { AvailabilityService } from './availability.service';
 
 @Module({
   imports: [PrismaModule],

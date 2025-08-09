@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import * as fs from 'fs';
+import * as handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
+import * as path from 'path';
 
 @Injectable()
 export class MailService {
@@ -21,5 +24,18 @@ export class MailService {
     };
 
     return this.transporter.sendMail(mailOptions);
+  }
+
+  renderTemplate(templateName: string, data: any): string {
+    const templatePath = path.join(
+      process.cwd(),
+      'templates',
+      `${templateName}.hbs`,
+    );
+    const templateSource = fs.readFileSync(templatePath, 'utf8');
+
+    const template = handlebars.compile(templateSource);
+
+    return template(data);
   }
 }

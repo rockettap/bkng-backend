@@ -1,10 +1,12 @@
-import { PrismaService } from 'src/prisma/prisma.service';
-import { Booking as DomainBooking } from './booking.entity';
-import { Booking as PrismaBooking } from 'generated/prisma';
-import { BookingStatus as DomainBookingStatus } from './booking-status.enum';
-// import { BookingStatus as PrismaBookingStatus } from 'generated/prisma';
 import { Injectable } from '@nestjs/common';
+import {
+  Booking as PrismaBooking,
+  BookingStatus as PrismaBookingStatus,
+} from 'generated/prisma';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { BookingRepository } from './booking-repository.interface';
+import { BookingStatus as DomainBookingStatus } from './booking-status.enum';
+import { Booking as DomainBooking } from './booking.entity';
 
 @Injectable()
 export class PrismaBookingRepository implements BookingRepository {
@@ -48,6 +50,7 @@ export class PrismaBookingRepository implements BookingRepository {
         userId: booking.userId,
         from: booking.from,
         to: booking.to,
+        pricePerHour: booking.pricePerHour,
         status: booking.status,
         stripeSessionId: booking.stripeSessionId,
       },
@@ -74,13 +77,13 @@ export class PrismaBookingRepository implements BookingRepository {
       booking.userId,
       booking.from,
       booking.to,
-      // this.mapStatus(booking.status),
-      booking.status as DomainBookingStatus,
+      booking.pricePerHour,
+      this.mapStatus(booking.status),
       booking.stripeSessionId ?? undefined,
     );
   }
 
-  // private mapStatus(status: PrismaBookingStatus): DomainBookingStatus {
-  //   return status as DomainBookingStatus;
-  // }
+  private mapStatus(status: PrismaBookingStatus): DomainBookingStatus {
+    return status as DomainBookingStatus;
+  }
 }

@@ -1,12 +1,12 @@
-import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
+import { Module } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
 import { AvailabilityModule } from './availability/availability.module';
 import { BookingModule } from './booking/booking.module';
-import { PaymentModule } from './payment/payment.module';
 import { GoogleCalendarModule } from './google-calendar/google-calendar.module';
 import { MailModule } from './mail/mail.module';
+import { PaymentModule } from './payment/payment.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [

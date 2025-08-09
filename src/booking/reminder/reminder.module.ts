@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
-import { ReminderService } from './reminder.service';
-import { ReminderConsumer } from './reminder.processor';
+import { Module } from '@nestjs/common';
 import { MailModule } from 'src/mail/mail.module';
+import { ReminderConsumer } from './reminder.processor';
+import { ReminderService } from './reminder.service';
 
 @Module({
   imports: [
