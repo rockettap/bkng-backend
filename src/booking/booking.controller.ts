@@ -1,24 +1,17 @@
 import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
 import { BookingService } from './booking.service';
+import { AddBookingDto } from './dto/add-booking.dto';
 
 @Controller('booking')
 export class BookingController {
   constructor(private readonly bookingService: BookingService) {}
 
   @Post()
-  async addBooking(@Body() body: { userId: number; from: string; to: string }) {
-    if (typeof body.userId !== 'number' || !body.from || !body.to) {
-      throw new BadRequestException();
-    }
-
-    const from = new Date(body.from);
-    const to = new Date(body.to);
-
-    if (isNaN(from.getTime()) || isNaN(to.getTime())) {
-      throw new BadRequestException();
-    }
-
+  async addBooking(@Body() body: AddBookingDto) {
     try {
+      const from = new Date(body.from);
+      const to = new Date(body.to);
+
       const url = await this.bookingService.create(body.userId, from, to);
 
       return { url };

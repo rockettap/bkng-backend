@@ -5,7 +5,7 @@ export class AvailabilityPolicy {
   ) {}
 
   isSatisfiedBy(from: Date, to: Date): boolean {
-    const durationInMinutes = (to.getTime() - from.getTime()) / 60000;
+    const durationInMinutes = (to.getTime() - from.getTime()) / 60_000;
     return (
       durationInMinutes >= this.minLengthInMinutes &&
       durationInMinutes <= this.maxLengthInMinutes

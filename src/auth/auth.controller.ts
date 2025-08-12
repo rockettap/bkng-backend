@@ -13,6 +13,8 @@ import {
 import { Request, Response } from 'express';
 import { GoogleAuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
+import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 import { JwtTokens } from './types/jwt-tokens.type';
 
 @Controller('auth')
@@ -44,12 +46,7 @@ export class AuthController {
   @Post('register')
   async signUp(
     @Body()
-    body: {
-      email: string;
-      password: string;
-      firstName: string;
-      familyName: string;
-    },
+    body: RegisterDto,
   ) {
     await this.authService.sendEmailConfirmation(
       body.email,
@@ -80,7 +77,7 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async signIn(
-    @Body() body: { email: string; password: string },
+    @Body() body: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ access_token: string }> {
     const { access_token, refresh_token } = await this.authService.signIn(

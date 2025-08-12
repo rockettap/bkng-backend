@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -47,6 +48,11 @@ export class AuthService {
     firstName: string,
     familyName: string,
   ) {
+    const user = await this.usersService.findByEmail(email);
+    if (user) {
+      throw new ConflictException();
+    }
+
     const emailToken = this.generateEmailToken(
       email,
       password,
@@ -58,7 +64,7 @@ export class AuthService {
       email,
       'Account confirmation',
       this.mailService.renderTemplate('confirmation-mail', {
-        token: emailToken,
+        token: emailToken.access_token,
       }),
     );
   }
@@ -74,7 +80,7 @@ export class AuthService {
     );
   }
 
-  async signUp(
+  private async signUp(
     email: string,
     password: string,
     firstName: string,

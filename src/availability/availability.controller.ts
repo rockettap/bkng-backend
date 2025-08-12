@@ -13,6 +13,8 @@ import { JwtAuthGuard } from 'src/auth/auth.guard';
 import { JwtPayload } from 'src/auth/types/jwt-payload.type';
 import { Availability } from './availability.entity';
 import { AvailabilityService } from './availability.service';
+import { AddAvailabilityDto } from './dto/add-availability.dto';
+import { findAvailabilitiesInRange } from './dto/find-availabilities-in-range.dto';
 
 @Controller('availability')
 export class AvailabilityController {
@@ -21,21 +23,13 @@ export class AvailabilityController {
   @Post()
   @UseGuards(JwtAuthGuard)
   async addAvailability(
-    @Body() body: { from: string; to: string; pricePerHour: number },
+    @Body() body: AddAvailabilityDto,
     @Req() req: Request & { user: JwtPayload },
   ): Promise<void> {
-    if (!body.from || !body.to || !body.pricePerHour) {
-      throw new BadRequestException();
-    }
-
-    const from = new Date(body.from);
-    const to = new Date(body.to);
-
-    if (isNaN(from.getTime()) || isNaN(to.getTime())) {
-      throw new BadRequestException();
-    }
-
     try {
+      const from = new Date(body.from);
+      const to = new Date(body.to);
+
       await this.availabilityService.create(
         req.user.sub,
         from,
@@ -51,26 +45,23 @@ export class AvailabilityController {
   }
 
   @Get()
-  async findManyInRange(
-    @Query('userId') userId: string,
-    @Query('from') fromStr: string,
-    @Query('to') toStr: string,
+  async findAvailabilitiesInRange(
+    @Query() query: findAvailabilitiesInRange,
   ): Promise<Availability[]> {
-    if (!fromStr || !toStr || !userId) {
-      throw new BadRequestException();
+    try {
+      const from = new Date(query.from);
+      const to = new Date(query.to);
+
+      return await this.availabilityService.findManyInRange(
+        query.userId,
+        from,
+        to,
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
     }
-
-    const from = new Date(fromStr);
-    const to = new Date(toStr);
-
-    if (isNaN(from.getTime()) || isNaN(to.getTime())) {
-      throw new BadRequestException();
-    }
-
-    return await this.availabilityService.findManyInRange(
-      Number(userId),
-      from,
-      to,
-    );
   }
 }

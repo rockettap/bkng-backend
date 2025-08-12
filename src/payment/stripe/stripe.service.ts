@@ -59,6 +59,7 @@ export class StripeService {
     const session = await this.stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
+      billing_address_collection: 'required',
       line_items: [
         {
           price_data: {
@@ -83,6 +84,7 @@ export class StripeService {
       metadata: {
         booking_id: booking.id,
       },
+      submit_type: 'book',
       success_url:
         'http://localhost:3000/booking/success?session_id={CHECKOUT_SESSION_ID}',
       cancel_url: 'http://localhost:3000/booking/cancel',
