@@ -1,10 +1,9 @@
+import { Repository } from 'src/common/repository.interface';
 import { User } from './user.entity';
 
-export interface UsersRepository {
-  findById(id: number): Promise<User | null>;
+export interface UsersRepository extends Repository<User> {
   findByEmail(email: string): Promise<User | null>;
-  findBySub(sub: string): Promise<User | null>;
-  create(user: User): Promise<User>;
+  findByGoogleId(sub: string): Promise<User | null>;
   update(user: User): Promise<User>;
   delete(user: User): Promise<boolean>;
 }

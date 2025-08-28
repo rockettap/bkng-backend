@@ -1,12 +1,11 @@
+import { Repository } from 'src/common/repository.interface';
+import { TimeRange } from 'src/common/value-objects/time-range.vo';
 import { Availability } from './availability.entity';
 
-export interface AvailabilityRepository {
-  findById(userId: number, from: Date, to: Date): Promise<Availability | null>;
-  findManyInRange(
+export interface AvailabilityRepository
+  extends Repository<Availability, { userId: number; timeRange: TimeRange }> {
+  findManyInTimeRange(
     userId: number,
-    from: Date,
-    to: Date,
+    timeRange: TimeRange,
   ): Promise<Availability[]>;
-  create(availability: Availability): Promise<Availability>;
-  delete(availability: Availability): Promise<boolean>;
 }

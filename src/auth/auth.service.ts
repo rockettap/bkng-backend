@@ -1,7 +1,6 @@
 import {
   ConflictException,
   Injectable,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -18,18 +17,18 @@ import { JwtTokens } from './types/jwt-tokens.type';
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly usersService: UsersService,
-    private readonly mailService: MailService,
     private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
+    private readonly usersService: UsersService,
   ) {}
 
   async validateGoogleLogin(profile: Profile): Promise<JwtTokens> {
-    const user = await this.usersService.findBySub(profile.id);
+    const user = await this.usersService.findByGoogleId(profile.id);
     if (!user) {
       const newUser = await this.usersService.create(
         User.createWithGoogle(
           0,
-          profile.id,
+          profile._json.sub,
           profile._json.given_name,
           profile._json.family_name,
           profile._json.picture,
@@ -42,7 +41,7 @@ export class AuthService {
     return this.generateTokens(user);
   }
 
-  async sendEmailConfirmation(
+  async signUp(
     email: string,
     password: string,
     firstName: string,
@@ -70,17 +69,21 @@ export class AuthService {
   }
 
   async verify(access_token: string): Promise<JwtTokens> {
-    const decoded = this.jwtService.verify<JwtEmailPayload>(access_token);
+    try {
+      const decoded = this.jwtService.verify<JwtEmailPayload>(access_token);
 
-    return await this.signUp(
-      decoded.email,
-      decoded.password,
-      decoded.firstName,
-      decoded.familyName,
-    );
+      return await this.createUser(
+        decoded.email,
+        decoded.password,
+        decoded.firstName,
+        decoded.familyName,
+      );
+    } catch {
+      throw new UnauthorizedException();
+    }
   }
 
-  private async signUp(
+  private async createUser(
     email: string,
     password: string,
     firstName: string,
@@ -111,9 +114,6 @@ export class AuthService {
       const decoded = this.jwtService.verify<JwtPayload>(refresh_token);
 
       const user = await this.usersService.findById(decoded.sub);
-      if (!user) {
-        throw new NotFoundException(`User with ID ${decoded.sub} not found.`);
-      }
 
       return this.generateTokens(user);
     } catch {
@@ -141,7 +141,6 @@ export class AuthService {
   private generateTokens(user: User): JwtTokens {
     const payload: JwtPayload = {
       sub: user.id,
-      username: `test-username-${user.id}`,
     };
     return {
       access_token: this.jwtService.sign(payload),

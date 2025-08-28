@@ -22,7 +22,7 @@ export class PrismaUsersRepository implements UsersRepository {
     return prismaUser ? this.toDomain(prismaUser) : null;
   }
 
-  async findBySub(sub: string): Promise<DomainUser | null> {
+  async findByGoogleId(sub: string): Promise<DomainUser | null> {
     const prismaUser = await this.prisma.user.findUnique({
       where: { sub },
     });
@@ -56,8 +56,8 @@ export class PrismaUsersRepository implements UsersRepository {
         familyName: user.profile.familyName,
         avatarUrl: user.profile.avatarUrl,
         stripeId: user.stripeId,
-        googleAccessToken: user.googleAccessToken,
-        googleRefreshToken: user.googleRefreshToken,
+        // googleAccessToken: user.googleAccessToken,
+        // googleRefreshToken: user.googleRefreshToken,
       },
     });
     return this.toDomain(updatedPrismaUser);
@@ -90,8 +90,8 @@ export class PrismaUsersRepository implements UsersRepository {
         user.familyName ?? undefined,
         user.avatarUrl ?? undefined,
         user.stripeId ?? undefined,
-        user.googleAccessToken ?? undefined,
-        user.googleRefreshToken ?? undefined,
+        // user.googleAccessToken ?? undefined,
+        // user.googleRefreshToken ?? undefined,
       );
     } else {
       throw new Error();

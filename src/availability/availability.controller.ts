@@ -8,18 +8,31 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 import { Request } from 'express';
 import { JwtAuthGuard } from 'src/auth/auth.guard';
 import { JwtPayload } from 'src/auth/types/jwt-payload.type';
+import { ErrorResponseDto } from 'src/common/dto/error-response.dto';
 import { Availability } from './availability.entity';
 import { AvailabilityService } from './availability.service';
 import { AddAvailabilityDto } from './dto/add-availability.dto';
-import { findAvailabilitiesInRange } from './dto/find-availabilities-in-range.dto';
+import {
+  findAvailabilitiesInRangeDto,
+  findAvailabilitiesInRangeResponseDto,
+} from './dto/find-availabilities-in-range.dto';
 
 @Controller('availability')
 export class AvailabilityController {
   constructor(private readonly availabilityService: AvailabilityService) {}
 
+  @ApiCreatedResponse()
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
+  @ApiBearerAuth()
   @Post()
   @UseGuards(JwtAuthGuard)
   async addAvailability(
@@ -27,13 +40,10 @@ export class AvailabilityController {
     @Req() req: Request & { user: JwtPayload },
   ): Promise<void> {
     try {
-      const from = new Date(body.from);
-      const to = new Date(body.to);
-
       await this.availabilityService.create(
         req.user.sub,
-        from,
-        to,
+        body.from,
+        body.to,
         body.pricePerHour,
       );
     } catch (error) {
@@ -44,18 +54,17 @@ export class AvailabilityController {
     }
   }
 
+  @ApiOkResponse({ type: findAvailabilitiesInRangeResponseDto, isArray: true })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
   @Get()
   async findAvailabilitiesInRange(
-    @Query() query: findAvailabilitiesInRange,
+    @Query() query: findAvailabilitiesInRangeDto,
   ): Promise<Availability[]> {
     try {
-      const from = new Date(query.from);
-      const to = new Date(query.to);
-
-      return await this.availabilityService.findManyInRange(
+      return await this.availabilityService.findManyInTimeRange(
         query.userId,
-        from,
-        to,
+        query.from,
+        query.to,
       );
     } catch (error) {
       if (error instanceof Error) {

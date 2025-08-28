@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Availability as PrismaAvailability } from 'generated/prisma';
+import { TimeRange as DomainTimeRange } from 'src/common/value-objects/time-range.vo';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AvailabilityRepository } from './availability-repository.interface';
 import { Availability as DomainAvailability } from './availability.entity';
@@ -8,27 +9,25 @@ import { Availability as DomainAvailability } from './availability.entity';
 export class PrismaAvailabilityRepository implements AvailabilityRepository {
   constructor(private prisma: PrismaService) {}
 
-  async findById(
-    userId: number,
-    from: Date,
-    to: Date,
-  ): Promise<DomainAvailability | null> {
+  async findById(id: {
+    userId: number;
+    timeRange: DomainTimeRange;
+  }): Promise<DomainAvailability | null> {
     const availability = await this.prisma.availability.findUnique({
       where: {
         userId_from_to: {
-          userId,
-          from,
-          to,
+          userId: id.userId,
+          from: id.timeRange.from,
+          to: id.timeRange.to,
         },
       },
     });
     return availability ? this.toDomain(availability) : null;
   }
 
-  async findManyInRange(
+  async findManyInTimeRange(
     userId: number,
-    from: Date,
-    to: Date,
+    timeRange: DomainTimeRange,
   ): Promise<DomainAvailability[]> {
     const records = await this.prisma.availability.findMany({
       where: {
@@ -36,12 +35,12 @@ export class PrismaAvailabilityRepository implements AvailabilityRepository {
         AND: [
           {
             from: {
-              lte: to,
+              lte: timeRange.to,
             },
           },
           {
             to: {
-              gte: from,
+              gte: timeRange.from,
             },
           },
         ],
@@ -78,9 +77,12 @@ export class PrismaAvailabilityRepository implements AvailabilityRepository {
   private toDomain(availability: PrismaAvailability): DomainAvailability {
     return new DomainAvailability(
       availability.userId,
-      availability.from,
-      availability.to,
+      this.mapTimeRange(availability.from, availability.to),
       availability.pricePerHour,
     );
+  }
+
+  private mapTimeRange(from: Date, to: Date): DomainTimeRange {
+    return new DomainTimeRange(from, to);
   }
 }

@@ -3,6 +3,7 @@ import {
   Booking as PrismaBooking,
   BookingStatus as PrismaBookingStatus,
 } from 'generated/prisma';
+import { TimeRange as DomainTimeRange } from 'src/common/value-objects/time-range.vo';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BookingRepository } from './booking-repository.interface';
 import { BookingStatus as DomainBookingStatus } from './booking-status.enum';
@@ -19,10 +20,9 @@ export class PrismaBookingRepository implements BookingRepository {
     return booking ? this.toDomain(booking) : null;
   }
 
-  async findManyInRange(
+  async findManyInTimeRange(
     userId: number,
-    from: Date,
-    to: Date,
+    timeRange: DomainTimeRange,
   ): Promise<DomainBooking[]> {
     const records = await this.prisma.booking.findMany({
       where: {
@@ -30,12 +30,12 @@ export class PrismaBookingRepository implements BookingRepository {
         AND: [
           {
             from: {
-              lte: to,
+              lte: timeRange.to,
             },
           },
           {
             to: {
-              gte: from,
+              gte: timeRange.from,
             },
           },
         ],
@@ -75,12 +75,15 @@ export class PrismaBookingRepository implements BookingRepository {
     return new DomainBooking(
       booking.id,
       booking.userId,
-      booking.from,
-      booking.to,
+      this.mapTimeRange(booking.from, booking.to),
       booking.pricePerHour,
       this.mapStatus(booking.status),
       booking.stripeSessionId ?? undefined,
     );
+  }
+
+  private mapTimeRange(from: Date, to: Date): DomainTimeRange {
+    return new DomainTimeRange(from, to);
   }
 
   private mapStatus(status: PrismaBookingStatus): DomainBookingStatus {

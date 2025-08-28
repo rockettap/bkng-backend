@@ -18,9 +18,6 @@ export class StripeService {
 
   async createAccountLink(userId: number) {
     const user = await this.usersService.findById(userId);
-    if (!user) {
-      throw new Error();
-    }
 
     if (!user.stripeId) {
       const account = await this.stripe.accounts.create({
@@ -100,11 +97,7 @@ export class StripeService {
       case 'checkout.session.completed':
         this.logger.log({
           event: 'checkout.session.completed',
-          metadata: event.data.object.metadata,
-        });
-
-        this.logger.log({
-          email: event.data.object.customer_details?.email,
+          object: event.data.object,
         });
 
         await this.bookingService.confirm(
@@ -116,7 +109,7 @@ export class StripeService {
       case 'checkout.session.expired':
         this.logger.log({
           event: 'checkout.session.expired',
-          metadata: event.data.object.metadata,
+          object: event.data.object,
         });
 
         await this.bookingService.cancel(

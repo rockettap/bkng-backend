@@ -17,7 +17,7 @@ export class GoogleCalendarService {
   generateAuthUrl(userId: number): string {
     const oauth2Client = this.createOAuthClient();
 
-    const payload = { sub: userId, username: `test-username-${userId}` };
+    const payload: JwtPayload = { sub: userId };
 
     return oauth2Client.generateAuthUrl({
       access_type: 'offline',
@@ -30,7 +30,7 @@ export class GoogleCalendarService {
     });
   }
 
-  async getTokensFromCode(code: string, token: string): Promise<JwtTokens> {
+  async exchangeCodeForTokens(code: string, token: string): Promise<JwtTokens> {
     const tokens = (await this.createOAuthClient().getToken(code)).tokens;
 
     if (!tokens.access_token || !tokens.refresh_token) throw new Error();
@@ -38,12 +38,8 @@ export class GoogleCalendarService {
     const decoded = this.jwtService.verify<JwtPayload>(token);
 
     const user = await this.usersService.findById(decoded.sub);
-    if (!user) {
-      throw new Error();
-    }
 
-    user.googleAccessToken = tokens.access_token;
-    user.googleRefreshToken = tokens.refresh_token;
+    // user.updateTokens(tokens.access_token, tokens.refresh_token);
 
     await this.usersService.update(user);
 
@@ -98,14 +94,14 @@ export class GoogleCalendarService {
       sendUpdates: 'none',
     });
 
-    this.logger.log({
-      message: 'Google Calendar link',
-      htmlLink: response.data.htmlLink,
-    });
-    this.logger.log({
-      message: 'Google Meet link',
-      uri: response.data.conferenceData?.entryPoints?.[0]?.uri,
-    });
+    // this.logger.log({
+    //   message: 'Google Calendar link',
+    //   htmlLink: response.data.htmlLink,
+    // });
+    // this.logger.log({
+    //   message: 'Google Meet link',
+    //   uri: response.data.conferenceData?.entryPoints?.[0]?.uri,
+    // });
 
     return response.data;
   }

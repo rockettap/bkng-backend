@@ -1,6 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { AvailabilityModule } from 'src/availability/availability.module';
-import { GoogleCalendarModule } from 'src/google-calendar/google-calendar.module';
+import { CalendarModule } from 'src/calendar/calendar.module';
 import { PaymentModule } from 'src/payment/payment.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { UsersModule } from 'src/users/users.module';
@@ -15,7 +15,7 @@ import { ReminderModule } from './reminder/reminder.module';
     AvailabilityModule,
     UsersModule,
     forwardRef(() => PaymentModule),
-    GoogleCalendarModule,
+    CalendarModule,
     ReminderModule,
   ],
   providers: [

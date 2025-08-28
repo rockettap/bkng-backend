@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { TimeRange } from 'src/common/value-objects/time-range.vo';
 import { AvailabilityRepository } from './availability-repository.interface';
 import { Availability } from './availability.entity';
 import { AvailabilityPolicy } from './availability.policy';
@@ -21,30 +22,36 @@ export class AvailabilityService {
     to: Date,
     pricePerHour: number,
   ): Promise<Availability> {
-    const overlapping = await this.availabilityRepository.findManyInRange(
+    const timeRange = new TimeRange(from, to);
+
+    const overlapping = await this.availabilityRepository.findManyInTimeRange(
       userId,
-      from,
-      to,
+      timeRange,
     );
 
     if (overlapping.length > 0) {
       throw new Error('Availability overlaps with existing availabilities.');
     }
 
-    if (this.policy.isSatisfiedBy(from, to)) {
-      throw new Error('Availability duration violates policy limits.');
+    if (!this.policy.isSatisfiedBy(timeRange)) {
+      throw new Error('Availability duration violates policy.');
     }
 
     return await this.availabilityRepository.create(
-      new Availability(userId, from, to, pricePerHour),
+      new Availability(userId, timeRange, pricePerHour),
     );
   }
 
-  async findManyInRange(
+  async findManyInTimeRange(
     userId: number,
     from: Date,
     to: Date,
   ): Promise<Availability[]> {
-    return await this.availabilityRepository.findManyInRange(userId, from, to);
+    const timeRange = new TimeRange(from, to);
+
+    return await this.availabilityRepository.findManyInTimeRange(
+      userId,
+      timeRange,
+    );
   }
 }

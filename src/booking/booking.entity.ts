@@ -1,72 +1,76 @@
+import { DomainException } from '../common/exceptions/domain.exception';
+import { TimeRange } from '../common/value-objects/time-range.vo';
 import { BookingStatus } from './booking-status.enum';
 
 export class Booking {
   constructor(
     public readonly id: number,
     public readonly userId: number,
-    public readonly from: Date,
-    public readonly to: Date,
+    private timeRange: TimeRange,
     public readonly pricePerHour: number,
     private _status: BookingStatus = BookingStatus.PENDING,
     public stripeSessionId?: string,
   ) {
     const MINIMUM_ADVANCE_TIME_MS = 5 * 60 * 1000; // 5 minutes
 
-    if (from.getTime() < Date.now() + MINIMUM_ADVANCE_TIME_MS) {
-      throw new Error('Bookings must be at least 5 minutes in advance.');
-    }
-
-    if (from >= to) {
-      throw new Error("The 'from' date must be earlier than the 'to' date.");
-    }
-
-    if (!Booking.isSameDay(from, to)) {
-      throw new Error("The 'from' and 'to' dates must be on the same day.");
+    if (this.from.getTime() < Date.now() + MINIMUM_ADVANCE_TIME_MS) {
+      throw new DomainException(
+        'Bookings must be at least 5 minutes in advance.',
+      );
     }
   }
 
-  private static isSameDay(a: Date, b: Date): boolean {
-    return (
-      a.getFullYear() === b.getFullYear() &&
-      a.getMonth() === b.getMonth() &&
-      a.getDate() === b.getDate()
-    );
+  get from(): Date {
+    return this.timeRange.from;
   }
 
-  get status(): BookingStatus {
-    return this._status;
+  get to(): Date {
+    return this.timeRange.to;
   }
 
   get price(): number {
     const MILLISECONDS_PER_15_MIN = 1000 * 60 * 15;
 
-    const durationMs = this.to.getTime() - this.from.getTime();
+    const durationMs = this.timeRange.durationMs;
     const blocks = Math.ceil(durationMs / MILLISECONDS_PER_15_MIN);
     const hours = blocks * 0.25;
 
     return hours * this.pricePerHour;
   }
 
-  msUntilStart = (): number => Math.max(this.from.getTime() - Date.now(), 0);
+  get status(): BookingStatus {
+    return this._status;
+  }
+
+  msUntilStart(): number {
+    return Math.max(this.from.getTime() - Date.now(), 0);
+  }
 
   confirm(): void {
     if (this._status !== BookingStatus.PENDING) {
-      throw new Error('Only pending bookings can be confirmed.');
+      throw new DomainException('Only pending bookings can be confirmed.');
     }
     this._status = BookingStatus.CONFIRMED;
   }
 
   cancel(): void {
     if (this._status !== BookingStatus.PENDING) {
-      throw new Error('Only pending bookings can be cancelled.');
+      throw new DomainException('Only pending bookings can be cancelled.');
     }
     this._status = BookingStatus.CANCELLED;
   }
 
   refund(): void {
     if (this._status !== BookingStatus.CONFIRMED) {
-      throw new Error('Only confirmed bookings can be refunded.');
+      throw new DomainException('Only confirmed bookings can be refunded.');
     }
     this._status = BookingStatus.REFUNDED;
+  }
+
+  toJSON(): object {
+    return {
+      ...this.timeRange,
+      pricePerHour: this.pricePerHour,
+    };
   }
 }

@@ -24,6 +24,11 @@ export class ReminderConsumer extends WorkerHost {
 
     try {
       await this.mailService.sendMail(userEmail, 'Booking reminder', html);
+
+      // await Promise.all([
+      //   this.mailService.sendMail(userEmail, 'Booking reminder', html),
+      //   this.mailService.sendMail(userEmail, 'Booking reminder', html),
+      // ]);
     } catch (error) {
       if (error instanceof Error) {
         this.logger.error(error.message);

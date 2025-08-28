@@ -1,35 +1,30 @@
+import { TimeRange } from 'src/common/value-objects/time-range.vo';
+
 export class Availability {
   constructor(
     public readonly userId: number,
-    public readonly from: Date,
-    public readonly to: Date,
-    private _pricePerHour: number,
+    private timeRange: TimeRange,
+    public readonly pricePerHour: number,
   ) {
-    if (from >= to) {
-      throw new Error("The 'from' date must be earlier than the 'to' date.");
-    }
+    const MINIMUM_ADVANCE_TIME_MS = 5 * 60 * 1000; // 5 minutes
 
-    if (!Availability.isSameDay(from, to)) {
-      throw new Error("The 'from' and 'to' dates must be on the same day.");
+    if (this.from.getTime() < Date.now() + MINIMUM_ADVANCE_TIME_MS) {
+      throw new Error('Availabilities must be at least 5 minutes in advance.');
     }
   }
 
-  get pricePerHour(): number {
-    return this._pricePerHour;
+  get from(): Date {
+    return this.timeRange.from;
   }
 
-  private static isSameDay(a: Date, b: Date): boolean {
-    return (
-      a.getFullYear() === b.getFullYear() &&
-      a.getMonth() === b.getMonth() &&
-      a.getDate() === b.getDate()
-    );
+  get to(): Date {
+    return this.timeRange.to;
   }
 
   toJSON(): object {
     return {
-      from: this.from,
-      to: this.to,
+      ...this.timeRange,
+      pricePerHour: this.pricePerHour,
     };
   }
 }

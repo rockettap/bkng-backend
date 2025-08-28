@@ -12,11 +12,11 @@ export class Email {
     return this._value;
   }
 
-  public toString(): string {
+  toString(): string {
     return this._value;
   }
 
   private static isValid(value: string): boolean {
-    return /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(value);
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
   }
 }

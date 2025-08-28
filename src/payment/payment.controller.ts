@@ -9,6 +9,11 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { JwtAuthGuard } from 'src/auth/auth.guard';
 import { JwtPayload } from 'src/auth/types/jwt-payload.type';
@@ -18,6 +23,8 @@ import { StripeService } from './stripe/stripe.service';
 export class PaymentController {
   constructor(private readonly stripeService: StripeService) {}
 
+  @ApiOkResponse()
+  @ApiBadRequestResponse()
   @Post('stripe/webhook')
   async handleStripeWebhook(
     @Req() req: RawBodyRequest<Request>,
@@ -37,6 +44,8 @@ export class PaymentController {
     }
   }
 
+  @ApiOkResponse()
+  @ApiBearerAuth()
   @Get('stripe/connect')
   @UseGuards(JwtAuthGuard)
   async connectStripe(

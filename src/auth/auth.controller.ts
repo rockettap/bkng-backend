@@ -10,10 +10,20 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiFoundResponse,
+  ApiInternalServerErrorResponse,
+  ApiOkResponse,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { Request, Response } from 'express';
+import { ErrorResponseDto } from 'src/common/dto/error-response.dto';
 import { GoogleAuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
+import { LoginDto, LoginResponseDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtTokens } from './types/jwt-tokens.type';
 
@@ -21,10 +31,13 @@ import { JwtTokens } from './types/jwt-tokens.type';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @ApiFoundResponse()
   @Get('google')
   @UseGuards(GoogleAuthGuard)
   redirectToGoogle() {}
 
+  @ApiOkResponse({ type: LoginResponseDto })
+  @ApiInternalServerErrorResponse({ type: ErrorResponseDto })
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
   handleGoogleCallback(
@@ -34,21 +47,21 @@ export class AuthController {
   ) {
     const { access_token, refresh_token } = req.user;
 
-    res.cookie('refresh_token', refresh_token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-    });
+    this.setRefreshTokenCookie(res, refresh_token);
 
     return { access_token };
   }
 
+  @ApiCreatedResponse()
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
+  @ApiConflictResponse({ type: ErrorResponseDto })
+  @ApiInternalServerErrorResponse({ type: ErrorResponseDto })
   @Post('register')
   async signUp(
     @Body()
     body: RegisterDto,
   ) {
-    await this.authService.sendEmailConfirmation(
+    await this.authService.signUp(
       body.email,
       body.password,
       body.firstName,
@@ -56,6 +69,7 @@ export class AuthController {
     );
   }
 
+  @ApiOkResponse({ type: LoginResponseDto })
   @Get('verify')
   @HttpCode(HttpStatus.OK)
   async verify(
@@ -65,15 +79,15 @@ export class AuthController {
     const { access_token, refresh_token } =
       await this.authService.verify(token);
 
-    res.cookie('refresh_token', refresh_token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-    });
+    this.setRefreshTokenCookie(res, refresh_token);
 
     return { access_token };
   }
 
+  @ApiOkResponse({ type: LoginResponseDto })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
+  @ApiUnauthorizedResponse({ type: ErrorResponseDto })
+  @ApiInternalServerErrorResponse({ type: ErrorResponseDto })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async signIn(
@@ -85,15 +99,13 @@ export class AuthController {
       body.password,
     );
 
-    res.cookie('refresh_token', refresh_token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-    });
+    this.setRefreshTokenCookie(res, refresh_token);
 
     return { access_token };
   }
 
+  @ApiOkResponse({ type: LoginResponseDto })
+  @ApiUnauthorizedResponse({ type: ErrorResponseDto })
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refreshToken(
@@ -108,12 +120,16 @@ export class AuthController {
       refresh_token: updatedRefreshToken,
     } = await this.authService.refreshToken(refreshToken);
 
-    res.cookie('refresh_token', updatedRefreshToken, {
+    this.setRefreshTokenCookie(res, updatedRefreshToken);
+
+    return { access_token: updatedAccessToken };
+  }
+
+  private setRefreshTokenCookie(res: Response, refreshToken: string) {
+    res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: false,
       sameSite: 'lax',
     });
-
-    return { access_token: updatedAccessToken };
   }
 }

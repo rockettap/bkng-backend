@@ -1,26 +1,30 @@
-import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { AvailabilityRepository } from 'src/availability/availability-repository.interface';
-import { GoogleCalendarService } from 'src/google-calendar/google-calendar.service';
+import { CalendarOrchestrator } from 'src/calendar/application/calendar.orchestrator';
+import { TimeRange } from 'src/common/value-objects/time-range.vo';
 import { StripeService } from 'src/payment/stripe/stripe.service';
 import { UsersService } from 'src/users/users.service';
+import { Email } from 'src/users/value-objects/email.vo';
 import { BookingRepository } from './booking-repository.interface';
 import { BookingStatus } from './booking-status.enum';
 import { Booking } from './booking.entity';
+import { BookingNotFoundException } from './exceptions/booking-not-found.exception';
+import { BookingOutsideAvailabilityException } from './exceptions/booking-outside-availability.exception';
+import { BookingOverlapException } from './exceptions/booking-overlap.exception';
+import { BookingPaymentFailedException } from './exceptions/booking-payment-failed.exception';
 import { ReminderService } from './reminder/reminder.service';
 
 @Injectable()
 export class BookingService {
-  private readonly logger = new Logger(BookingService.name);
-
   constructor(
     @Inject('AvailabilityRepository')
     private readonly availabilityRepository: AvailabilityRepository,
-    private readonly usersService: UsersService,
+    private readonly calendarOrchestrator: CalendarOrchestrator,
     @Inject(forwardRef(() => StripeService))
     private readonly stripeService: StripeService,
+    private readonly usersService: UsersService,
     @Inject('BookingRepository')
     private readonly bookingRepository: BookingRepository,
-    private readonly googleCalendarService: GoogleCalendarService,
     private readonly reminderService: ReminderService,
   ) {}
 
@@ -29,29 +33,36 @@ export class BookingService {
     from: Date,
     to: Date,
   ): Promise<string | undefined> {
+    const timeRange = new TimeRange(from, to);
+
     const user = await this.usersService.findById(userId);
-    if (!user || !user.stripeId) {
-      throw new Error(`User with ID ${userId} not found.`);
+    if (!user.stripeId) {
+      throw new Error();
     }
 
     const availabilityOverlapping =
-      await this.availabilityRepository.findManyInRange(userId, from, to);
+      await this.availabilityRepository.findManyInTimeRange(userId, timeRange);
     if (availabilityOverlapping.length !== 1) {
-      throw new Error('Booking must be within availability.');
+      throw new BookingOutsideAvailabilityException();
     }
 
     const bookingOverlapping = (
-      await this.bookingRepository.findManyInRange(userId, from, to)
+      await this.bookingRepository.findManyInTimeRange(userId, timeRange)
     ).filter(
       (booking) =>
         booking.status !== BookingStatus.CANCELLED || BookingStatus.REFUNDED,
     );
     if (bookingOverlapping.length > 0) {
-      throw new Error('Booking overlaps with existing bookings.');
+      throw new BookingOverlapException();
     }
 
     const booking = await this.bookingRepository.create(
-      new Booking(0, userId, from, to, availabilityOverlapping[0].pricePerHour),
+      new Booking(
+        0,
+        userId,
+        timeRange,
+        availabilityOverlapping[0].pricePerHour,
+      ),
     );
 
     try {
@@ -64,57 +75,44 @@ export class BookingService {
       await this.bookingRepository.update(booking);
 
       return session.url!;
-    } catch (error) {
+    } catch {
       booking.cancel();
       await this.bookingRepository.update(booking);
 
-      if (error instanceof Error) {
-        throw error;
-      }
+      throw new BookingPaymentFailedException();
     }
   }
 
   async confirm(bookingId: number, email?: string) {
     const booking = await this.bookingRepository.findById(bookingId);
     if (!booking) {
-      throw new Error(`Booking with ID '${bookingId}' not found.`);
+      throw new BookingNotFoundException(bookingId);
     }
 
     booking.confirm();
 
-    const user = await this.usersService.findById(booking.userId);
-    if (!user) {
-      throw new Error(`User with ID ${booking.userId} not found.`);
-    }
-
-    if (!user.googleAccessToken || !user.googleRefreshToken) {
-      this.logger.warn({
-        message:
-          'User has probably not associated their account with Google Calendar.',
-      });
-    } else {
-      await this.googleCalendarService.createGoogleCalendarEvent(
-        {
-          access_token: user.googleAccessToken,
-          refresh_token: user.googleRefreshToken,
-        },
-        booking.id,
-        booking.from,
-        booking.to,
-        email,
-      );
-    }
+    // const user = await this.usersService.findById(booking.userId);
+    // if (!user) {
+    //   throw new UserNotFoundException(booking.userId);
+    // }
 
     await this.bookingRepository.update(booking);
 
+    // Create events in calendars
+    await this.calendarOrchestrator.createEvents(
+      booking,
+      email ? new Email(email) : undefined,
+    );
+
     // Send a notification
-    const REMINDER_OFFSET_MS = 5 * 60 * 1000; // 5 minutes
+    const REMINDER_OFFSET_MS = 30 * 60 * 1000; // 30 minutes
     const msUntilStart = booking.msUntilStart() - REMINDER_OFFSET_MS;
 
     if (msUntilStart <= 0 || !email) return;
 
     await this.reminderService.scheduleReminder(
       {
+        bookingId: booking.id,
         userEmail: email,
         from: booking.from,
         to: booking.to,
@@ -126,22 +124,26 @@ export class BookingService {
   async cancel(bookingId: number) {
     const booking = await this.bookingRepository.findById(bookingId);
     if (!booking) {
-      throw new Error(`Booking with ID '${bookingId}' not found.`);
+      throw new BookingNotFoundException(bookingId);
     }
 
     booking.cancel();
 
     await this.bookingRepository.update(booking);
+
+    await this.reminderService.cancelReminder(bookingId);
   }
 
   async refund(bookingId: number) {
     const booking = await this.bookingRepository.findById(bookingId);
     if (!booking) {
-      throw new Error(`Booking with ID '${bookingId}' not found.`);
+      throw new BookingNotFoundException(bookingId);
     }
 
     booking.refund();
 
     await this.bookingRepository.update(booking);
+
+    await this.reminderService.cancelReminder(bookingId);
   }
 }

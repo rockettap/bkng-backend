@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { UserNotFoundException } from './exceptions/user-not-found.exception';
 import { User } from './user.entity';
 import { UsersRepository } from './users-repository.interface';
 
@@ -9,16 +10,20 @@ export class UsersService {
     private readonly usersRepository: UsersRepository,
   ) {}
 
-  async findById(id: number): Promise<User | null> {
-    return await this.usersRepository.findById(id);
+  async findById(id: number): Promise<User> {
+    const user = await this.usersRepository.findById(id);
+    if (!user) {
+      throw new UserNotFoundException(id);
+    }
+    return user;
   }
 
   async findByEmail(email: string): Promise<User | null> {
     return await this.usersRepository.findByEmail(email);
   }
 
-  async findBySub(sub: string): Promise<User | null> {
-    return await this.usersRepository.findBySub(sub);
+  async findByGoogleId(sub: string): Promise<User | null> {
+    return await this.usersRepository.findByGoogleId(sub);
   }
 
   async create(user: User): Promise<User> {

@@ -9,25 +9,52 @@ datasource db {
 }
 
 model User {
-  id                 Int     @id @default(autoincrement())
-  email              String? @unique
-  passwordHash       String?
+  id           Int     @id @default(autoincrement())
+  email        String? @unique
+  passwordHash String?
 
-  firstName          String?
-  familyName         String?
-  avatarUrl          String?
+  firstName  String? @db.VarChar(32)
+  familyName String? @db.VarChar(32)
+  avatarUrl  String?
 
-  sub                String? @unique
-  stripeId           String? @unique
-  googleAccessToken  String?
-  googleRefreshToken String?
+  sub      String? @unique
+  stripeId String? @unique
+
+  // TODO: move to the GoogleCalendarIntegration
+  // googleAccessToken  String?
+  // googleRefreshToken String?
+
+  Availability              Availability[]
+  Booking                   Booking[]
+  GoogleCalendarIntegration GoogleCalendarIntegration[]
+  AppleCalendarIntegration  AppleCalendarIntegration[]
+}
+
+model GoogleCalendarIntegration {
+  id           Int     @id @default(autoincrement())
+  userId       Int
+  accessToken  String
+  refreshToken String?
+
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AppleCalendarIntegration {
+  id       Int    @id @default(autoincrement())
+  userId   Int
+  username String
+  password String
+
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Availability {
   userId       Int
   from         DateTime
   to           DateTime
-  pricePerHour Int         @default(1)
+  pricePerHour Int      @default(0)
+
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, from, to])
 }
@@ -44,7 +71,9 @@ model Booking {
   userId          Int
   from            DateTime
   to              DateTime
-  pricePerHour    Int           @default(1)
+  pricePerHour    Int           @default(0)
   status          BookingStatus
   stripeSessionId String?       @unique
+
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

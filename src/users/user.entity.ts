@@ -9,8 +9,8 @@ export class User {
     private _passwordHash?: string,
     private _googleId?: string,
     public stripeId?: string,
-    public googleAccessToken?: string,
-    public googleRefreshToken?: string,
+    // private _googleAccessToken?: string,
+    // private _googleRefreshToken?: string,
   ) {}
 
   get profile(): Profile {
@@ -28,6 +28,19 @@ export class User {
   get googleId(): string | undefined {
     return this._googleId;
   }
+
+  // get googleAccessToken(): string | undefined {
+  //   return this._googleAccessToken;
+  // }
+
+  // get googleRefreshToken(): string | undefined {
+  //   return this._googleRefreshToken;
+  // }
+
+  // updateTokens(accessToken: string, refreshToken: string) {
+  //   this._googleAccessToken = accessToken;
+  //   this._googleRefreshToken = refreshToken;
+  // }
 
   static createWithEmail(
     id: number,
@@ -54,25 +67,29 @@ export class User {
     familyName?: string,
     avatarUrl?: string,
     stripeId?: string,
-    googleAccessToken?: string,
-    googleRefreshToken?: string,
+    // googleAccessToken?: string,
+    // googleRefreshToken?: string,
   ): User {
     return new User(
       id,
-      new Profile(firstName, familyName, avatarUrl),
+      new Profile(
+        firstName,
+        familyName,
+        avatarUrl ? new URL(avatarUrl) : undefined,
+      ),
       undefined,
       undefined,
       googleId,
       stripeId,
-      googleAccessToken,
-      googleRefreshToken,
+      // googleAccessToken,
+      // googleRefreshToken,
     );
   }
 
   toJSON(): object {
     return {
       id: this.id,
-      profile: this.profile,
+      ...this.profile,
     };
   }
 }

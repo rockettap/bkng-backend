@@ -4,16 +4,19 @@ import {
   IsNotEmpty,
   IsString,
   IsStrongPassword,
+  MaxLength,
   MinLength,
 } from 'class-validator';
 
 export class RegisterDto {
-  @IsEmail()
   @ApiProperty({ example: 'sasha386058@gmail.com' })
+  @IsEmail()
   readonly email: string;
 
+  @ApiProperty({ example: '_0Aqwert' })
   @IsString()
   @MinLength(8)
+  @MaxLength(100)
   @IsStrongPassword({
     minLength: 8,
     minLowercase: 1,
@@ -21,16 +24,15 @@ export class RegisterDto {
     minNumbers: 1,
     minSymbols: 1,
   })
-  @ApiProperty({ example: '_0Aqwert' })
   readonly password: string;
 
+  @ApiProperty({ example: 'Yevhen' })
   @IsString()
   @IsNotEmpty()
-  @ApiProperty({ example: 'Anastasia' })
   readonly firstName: string;
 
+  @ApiProperty({ example: 'Kornijchuk' })
   @IsString()
   @IsNotEmpty()
-  @ApiProperty({ example: 'Yevhen' })
   readonly familyName: string;
 }

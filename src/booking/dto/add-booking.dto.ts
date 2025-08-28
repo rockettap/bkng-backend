@@ -1,12 +1,16 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString, IsInt } from 'class-validator';
 
 export class AddBookingDto {
   @IsInt()
+  @ApiProperty()
   readonly userId: number;
 
   @IsDateString()
-  readonly from: string;
+  @ApiProperty()
+  readonly from: Date;
 
   @IsDateString()
-  readonly to: string;
+  @ApiProperty()
+  readonly to: Date;
 }

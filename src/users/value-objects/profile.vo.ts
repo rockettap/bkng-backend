@@ -1,8 +1,8 @@
 export class Profile {
   constructor(
-    private _firstName?: string,
-    private _familyName?: string,
-    private _avatarUrl?: string,
+    private readonly _firstName?: string,
+    private readonly _familyName?: string,
+    private readonly _avatarUrl?: URL,
   ) {}
 
   get firstName(): string | undefined {
@@ -14,21 +14,18 @@ export class Profile {
   }
 
   get avatarUrl(): string | undefined {
-    return this._avatarUrl;
+    return this._avatarUrl?.toString();
   }
 
-  isComplite(): boolean {
-    if (!this._firstName || !this._familyName) {
-      return false;
-    }
-    return true;
+  isComplete(): boolean {
+    return !!(this._firstName && this._familyName);
   }
 
   toJSON(): { firstName?: string; familyName?: string; avatarUrl?: string } {
     return {
-      firstName: this._firstName,
-      familyName: this._familyName,
-      avatarUrl: this._avatarUrl,
+      firstName: this.firstName,
+      familyName: this.familyName,
+      avatarUrl: this.avatarUrl?.toString(),
     };
   }
 }

@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
 import { AvailabilityModule } from './availability/availability.module';
 import { BookingModule } from './booking/booking.module';
-import { GoogleCalendarModule } from './google-calendar/google-calendar.module';
+import { CalendarModule } from './calendar/calendar.module';
 import { MailModule } from './mail/mail.module';
 import { PaymentModule } from './payment/payment.module';
 import { UsersModule } from './users/users.module';
@@ -17,12 +17,12 @@ import { UsersModule } from './users/users.module';
       },
     }),
     AuthModule,
-    UsersModule,
     AvailabilityModule,
     BookingModule,
-    PaymentModule,
-    GoogleCalendarModule,
+    CalendarModule,
     MailModule,
+    PaymentModule,
+    UsersModule,
   ],
 })
 export class AppModule {}
