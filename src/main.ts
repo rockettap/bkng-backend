@@ -4,6 +4,9 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+// import { Booking } from './booking/booking.entity';
+// import { CalendarOrchestrator } from './calendar/application/calendar.orchestrator';
+// import { TimeRange } from './common/value-objects/time-range.vo';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -42,6 +45,20 @@ async function bootstrap() {
   //   `;
   //   res.type('html').send(html);
   // });
+
+  // const calendarOrchestrator = app.get(CalendarOrchestrator);
+
+  // await calendarOrchestrator.createEvents(
+  //   new Booking(
+  //     0,
+  //     0,
+  //     new TimeRange(
+  //       new Date('2025-08-29T17:54:18Z'),
+  //       new Date('2025-08-29T17:59:18Z'),
+  //     ),
+  //     1,
+  //   ),
+  // );
 
   const config = new DocumentBuilder()
     .setTitle('bkng')

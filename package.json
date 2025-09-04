@@ -39,6 +39,7 @@
     "cookie-parser": "^1.4.7",
     "googleapis": "^154.0.0",
     "hbs": "^4.2.0",
+    "joi": "^18.0.1",
     "nodemailer": "^7.0.5",
     "passport": "^0.7.0",
     "passport-custom": "^1.1.1",

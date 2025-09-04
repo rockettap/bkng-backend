@@ -1,6 +1,6 @@
 export interface ReminderJob {
   bookingId: number;
-  userEmail: string;
+  sellerEmail: string;
   from: Date;
   to: Date;
 }

@@ -16,7 +16,6 @@ import {
 } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { JwtAuthGuard } from 'src/auth/auth.guard';
-import { JwtPayload } from 'src/auth/types/jwt-payload.type';
 import { StripeService } from './stripe/stripe.service';
 
 @Controller('payment')
@@ -50,9 +49,9 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard)
   async connectStripe(
     @Req()
-    req: Request & { user: JwtPayload },
+    req: Request,
   ) {
-    const url = await this.stripeService.createAccountLink(req.user.sub);
+    const url = await this.stripeService.createAccountLink(req.user!.sub);
 
     return { url };
   }

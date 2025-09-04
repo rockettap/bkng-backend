@@ -7,8 +7,11 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Profile } from 'passport-google-oauth20';
 import { MailService } from 'src/mail/mail.service';
-import { User } from 'src/users/user.entity';
-import { UsersService } from 'src/users/users.service';
+import { SellerService } from 'src/seller/application/seller.service';
+import { EmailAuth, Seller } from 'src/seller/domain/seller.entity';
+import { SellerFactory } from 'src/seller/domain/seller.factory';
+import { Email } from 'src/seller/domain/value-objects/email.vo';
+import { Profile as DomainProfile } from 'src/seller/domain/value-objects/profile.vo';
 import { JwtEmailPayload } from './types/jwt-email-payload.type';
 import { JwtEmailToken } from './types/jwt-email-token.type';
 import { JwtPayload } from './types/jwt-payload.type';
@@ -19,26 +22,27 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly mailService: MailService,
-    private readonly usersService: UsersService,
+    private readonly sellerService: SellerService,
   ) {}
 
   async validateGoogleLogin(profile: Profile): Promise<JwtTokens> {
-    const user = await this.usersService.findByGoogleId(profile.id);
-    if (!user) {
-      const newUser = await this.usersService.create(
-        User.createWithGoogle(
-          0,
+    const seller = await this.sellerService.findByGoogleId(profile.id);
+    if (!seller) {
+      const newSeller = await this.sellerService.create(
+        SellerFactory.createWithGoogle(
+          new DomainProfile(
+            profile._json.given_name,
+            profile._json.family_name,
+            profile._json.picture ? new URL(profile._json.picture) : undefined,
+          ),
           profile._json.sub,
-          profile._json.given_name,
-          profile._json.family_name,
-          profile._json.picture,
         ),
       );
 
-      return this.generateTokens(newUser);
+      return this.generateTokens(newSeller);
     }
 
-    return this.generateTokens(user);
+    return this.generateTokens(seller);
   }
 
   async signUp(
@@ -47,8 +51,8 @@ export class AuthService {
     firstName: string,
     familyName: string,
   ) {
-    const user = await this.usersService.findByEmail(email);
-    if (user) {
+    const seller = await this.sellerService.findByEmail(email);
+    if (seller) {
       throw new ConflictException();
     }
 
@@ -72,7 +76,7 @@ export class AuthService {
     try {
       const decoded = this.jwtService.verify<JwtEmailPayload>(access_token);
 
-      return await this.createUser(
+      return await this.createSeller(
         decoded.email,
         decoded.password,
         decoded.firstName,
@@ -83,39 +87,46 @@ export class AuthService {
     }
   }
 
-  private async createUser(
+  private async createSeller(
     email: string,
     password: string,
     firstName: string,
     familyName: string,
   ): Promise<JwtTokens> {
     const passwordHash = await bcrypt.hash(password, 10);
-    const user = await this.usersService.create(
-      User.createWithEmail(0, email, passwordHash, firstName, familyName),
+    const seller = await this.sellerService.create(
+      SellerFactory.createWithEmail(
+        new DomainProfile(firstName, familyName),
+        new Email(email),
+        passwordHash,
+      ),
     );
 
-    return this.generateTokens(user);
+    return this.generateTokens(seller);
   }
 
   async signIn(email: string, password: string): Promise<JwtTokens> {
-    const user = await this.usersService.findByEmail(email);
-    const isValid =
-      user?.passwordHash && (await bcrypt.compare(password, user.passwordHash));
+    const seller = await this.sellerService.findByEmailOrThrow(email);
 
+    if (!(seller.auth instanceof EmailAuth)) {
+      throw new UnauthorizedException();
+    }
+
+    const isValid = await bcrypt.compare(password, seller.auth.passwordHash);
     if (!isValid) {
       throw new UnauthorizedException();
     }
 
-    return this.generateTokens(user);
+    return this.generateTokens(seller);
   }
 
   async refreshToken(refresh_token: string): Promise<JwtTokens> {
     try {
       const decoded = this.jwtService.verify<JwtPayload>(refresh_token);
 
-      const user = await this.usersService.findById(decoded.sub);
+      const seller = await this.sellerService.findByIdOrThrow(decoded.sub);
 
-      return this.generateTokens(user);
+      return this.generateTokens(seller);
     } catch {
       throw new UnauthorizedException();
     }
@@ -138,9 +149,9 @@ export class AuthService {
     };
   }
 
-  private generateTokens(user: User): JwtTokens {
+  private generateTokens(seller: Seller): JwtTokens {
     const payload: JwtPayload = {
-      sub: user.id,
+      sub: seller.id,
     };
     return {
       access_token: this.jwtService.sign(payload),

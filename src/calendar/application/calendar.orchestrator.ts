@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Booking } from 'src/booking/booking.entity';
-import { Email } from 'src/users/value-objects/email.vo';
-import { CalendarService } from '../infrastructure/calendar-service.interface';
+import { Booking } from 'src/booking/domain/booking.entity';
+import { Email } from 'src/seller/domain/value-objects/email.vo';
+import { CalendarService } from '../domain/calendar-service.interface';
 import { CALENDAR_SERVICES } from './tokens';
 
 @Injectable()
@@ -22,6 +22,7 @@ export class CalendarOrchestrator {
             this.logger.warn(
               `Skipping service ${error.message} for booking ${booking.id}...`,
             );
+            return;
           }
           throw error;
         }

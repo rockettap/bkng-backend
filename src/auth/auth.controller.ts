@@ -41,8 +41,7 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
   handleGoogleCallback(
-    @Req()
-    req: Request & { user: JwtTokens },
+    @Req() req: Request & { user: JwtTokens },
     @Res({ passthrough: true }) res: Response,
   ) {
     const { access_token, refresh_token } = req.user;

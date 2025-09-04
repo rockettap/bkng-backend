@@ -3,11 +3,11 @@ import { CalendarIntegration } from '../calendar-integration.entity';
 export class AppleCalendarIntegration extends CalendarIntegration {
   constructor(
     id: number,
-    userId: number,
+    sellerId: number,
     private _username: string,
     private _password: string,
   ) {
-    super(id, userId);
+    super(id, sellerId);
   }
 
   get username() {

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { GoogleCalendarIntegration as PrismaGoogleCalendarIntegration } from 'generated/prisma';
 import { GoogleCalendarIntegration as DomainGoogleCalendarIntegration } from 'src/calendar/domain/google/google-calendar-integration.entity';
 import { GoogleCalendarIntegrationRepository } from 'src/calendar/domain/google/google-calendar-repository.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -9,25 +10,62 @@ export class PrismaGoogleCalendarRepository
 {
   constructor(private prisma: PrismaService) {}
 
-  findById(id: number): Promise<DomainGoogleCalendarIntegration | null> {
-    throw new Error('Method not implemented.');
+  async findById(id: number): Promise<DomainGoogleCalendarIntegration | null> {
+    const googleCalendarIntegration =
+      await this.prisma.googleCalendarIntegration.findUnique({
+        where: { id },
+      });
+    return googleCalendarIntegration
+      ? this.toDomain(googleCalendarIntegration)
+      : null;
   }
 
-  findByUserId(
-    userId: number,
+  async findBySellerId(
+    sellerId: number,
   ): Promise<DomainGoogleCalendarIntegration | null> {
-    throw new Error('Method not implemented.');
+    const googleCalendarIntegration =
+      await this.prisma.googleCalendarIntegration.findUnique({
+        where: { sellerId },
+      });
+    return googleCalendarIntegration
+      ? this.toDomain(googleCalendarIntegration)
+      : null;
   }
 
-  create(
+  async create(
     googleCalendarIntegration: DomainGoogleCalendarIntegration,
   ): Promise<DomainGoogleCalendarIntegration> {
-    throw new Error('Method not implemented.');
+    const created = await this.prisma.googleCalendarIntegration.create({
+      data: {
+        sellerId: googleCalendarIntegration.sellerId,
+        accessToken: googleCalendarIntegration.accessToken,
+        refreshToken: googleCalendarIntegration.refreshToken,
+      },
+    });
+    return this.toDomain(created);
   }
 
-  update(
+  async update(
     googleCalendarIntegration: DomainGoogleCalendarIntegration,
   ): Promise<DomainGoogleCalendarIntegration> {
-    throw new Error('Method not implemented.');
+    const updated = await this.prisma.googleCalendarIntegration.update({
+      where: { id: googleCalendarIntegration.id },
+      data: {
+        accessToken: googleCalendarIntegration.accessToken,
+        refreshToken: googleCalendarIntegration.refreshToken,
+      },
+    });
+    return this.toDomain(updated);
+  }
+
+  private toDomain(
+    googleCalendarIntegration: PrismaGoogleCalendarIntegration,
+  ): DomainGoogleCalendarIntegration {
+    return new DomainGoogleCalendarIntegration(
+      googleCalendarIntegration.id,
+      googleCalendarIntegration.sellerId,
+      googleCalendarIntegration.accessToken,
+      googleCalendarIntegration.refreshToken ?? undefined,
+    );
   }
 }

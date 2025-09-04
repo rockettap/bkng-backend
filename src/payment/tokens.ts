@@ -1,0 +1,1 @@
+export const PAYMENT_GATEWAYS = 'PAYMENT_GATEWAYS';

@@ -20,12 +20,12 @@ export class PrismaAppleCalendarRepository
       : null;
   }
 
-  async findByUserId(
-    userId: number,
+  async findBySellerId(
+    sellerId: number,
   ): Promise<DomainAppleCalendarIntegration | null> {
     const appleCalendarIntegration =
       await this.prisma.appleCalendarIntegration.findFirst({
-        where: { userId },
+        where: { sellerId },
       });
     return appleCalendarIntegration
       ? this.toDomain(appleCalendarIntegration)
@@ -39,7 +39,7 @@ export class PrismaAppleCalendarRepository
       await this.prisma.appleCalendarIntegration.create({
         data: {
           id: appleCalendarIntegration.id,
-          userId: appleCalendarIntegration.userId,
+          sellerId: appleCalendarIntegration.sellerId,
           username: appleCalendarIntegration.username,
           password: appleCalendarIntegration.password,
         },
@@ -52,7 +52,7 @@ export class PrismaAppleCalendarRepository
   ): DomainAppleCalendarIntegration {
     return new DomainAppleCalendarIntegration(
       appleCalendarIntegration.id,
-      appleCalendarIntegration.userId,
+      appleCalendarIntegration.sellerId,
       appleCalendarIntegration.username,
       appleCalendarIntegration.password,
     );

@@ -1,8 +1,8 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
-import { Booking } from 'src/booking/booking.entity';
-import { BookingService } from 'src/booking/booking.service';
-import { User } from 'src/users/user.entity';
-import { UsersService } from 'src/users/users.service';
+import { BookingService } from 'src/booking/application/booking.service';
+import { Booking } from 'src/booking/domain/booking.entity';
+import { SellerService } from 'src/seller/application/seller.service';
+import { Seller } from 'src/seller/domain/seller.entity';
 import Stripe from 'stripe';
 
 @Injectable()
@@ -13,11 +13,11 @@ export class StripeService {
   constructor(
     @Inject(forwardRef(() => BookingService))
     private readonly bookingService: BookingService,
-    private readonly usersService: UsersService,
+    private readonly usersService: SellerService,
   ) {}
 
   async createAccountLink(userId: number) {
-    const user = await this.usersService.findById(userId);
+    const user = await this.usersService.findByIdOrThrow(userId);
 
     if (!user.stripeId) {
       const account = await this.stripe.accounts.create({
@@ -48,7 +48,7 @@ export class StripeService {
     return accountLink.url;
   }
 
-  async createCheckoutSession(booking: Booking, user: User) {
+  async createCheckoutSession(booking: Booking, user: Seller) {
     if (!user.stripeId) {
       throw new Error();
     }

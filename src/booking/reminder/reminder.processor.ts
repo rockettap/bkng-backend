@@ -13,7 +13,7 @@ export class ReminderConsumer extends WorkerHost {
   }
 
   async process(job: Job<ReminderJob, any, string>): Promise<any> {
-    const { userEmail, from, to } = job.data;
+    const { sellerEmail, from, to } = job.data;
 
     this.logger.debug(job.data);
 
@@ -23,7 +23,7 @@ export class ReminderConsumer extends WorkerHost {
     });
 
     try {
-      await this.mailService.sendMail(userEmail, 'Booking reminder', html);
+      await this.mailService.sendMail(sellerEmail, 'Booking reminder', html);
 
       // await Promise.all([
       //   this.mailService.sendMail(userEmail, 'Booking reminder', html),

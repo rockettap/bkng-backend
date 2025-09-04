@@ -1,5 +1,9 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import * as Joi from 'joi';
+import { AuthModule } from 'src/auth/auth.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { SellerModule } from 'src/seller/seller.module';
 import { CalendarOrchestrator } from './application/calendar.orchestrator';
 import {
   APPLE_CALENDAR_INTEGRATION_REPOSITORY,
@@ -13,16 +17,27 @@ import { PrismaGoogleCalendarRepository as PrismaGoogleCalendarIntegrationReposi
 import { GoogleCalendarService } from './infrastructure/google/google-calendar.service';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [
+    SellerModule,
+    PrismaModule,
+    AuthModule,
+    ConfigModule.forRoot({
+      validationSchema: Joi.object({
+        GOOGLE_CLIENT_ID: Joi.string().required(),
+        GOOGLE_CLIENT_SECRET: Joi.string().required(),
+        GOOGLE_CALENDAR_REDIRECT_URI: Joi.string().required(),
+      }),
+    }),
+  ],
   providers: [
     GoogleCalendarService,
     AppleCalendarService,
     {
       provide: CALENDAR_SERVICES,
-      useFactory: (
+      useFactory: () => ({
         googleCalendar: GoogleCalendarService,
         appleCalendar: AppleCalendarService,
-      ) => [googleCalendar, appleCalendar],
+      }),
       inject: [GoogleCalendarService, AppleCalendarService],
     },
     {

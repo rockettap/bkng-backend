@@ -9,54 +9,80 @@ datasource db {
 }
 
 model User {
-  id           Int     @id @default(autoincrement())
-  email        String? @unique
-  passwordHash String?
+  id Int @id @default(autoincrement())
+
+  emailAuthMethod  EmailAuthMethod?
+  googleAuthMethod GoogleAuthMethod?
+
+  googleCalendarIntegration GoogleCalendarIntegration?
+  appleCalendarIntegration  AppleCalendarIntegration?
 
   firstName  String? @db.VarChar(32)
   familyName String? @db.VarChar(32)
   avatarUrl  String?
 
-  sub      String? @unique
   stripeId String? @unique
 
-  // TODO: move to the GoogleCalendarIntegration
-  // googleAccessToken  String?
-  // googleRefreshToken String?
+  Availability Availability[]
+  Booking      Booking[]
+}
 
-  Availability              Availability[]
-  Booking                   Booking[]
-  GoogleCalendarIntegration GoogleCalendarIntegration[]
-  AppleCalendarIntegration  AppleCalendarIntegration[]
+model EmailAuthMethod {
+  id           Int    @id @default(autoincrement())
+  sellerId       Int    @unique
+  email        String @unique
+  passwordHash String
+
+  user User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+}
+
+model GoogleAuthMethod {
+  id       Int    @id @default(autoincrement())
+  sellerId   Int    @unique
+  googleId String @unique
+
+  user User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 }
 
 model GoogleCalendarIntegration {
   id           Int     @id @default(autoincrement())
-  userId       Int
+  sellerId       Int     @unique
   accessToken  String
   refreshToken String?
 
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 }
 
 model AppleCalendarIntegration {
   id       Int    @id @default(autoincrement())
-  userId   Int
+  sellerId   Int    @unique
   username String
   password String
 
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 }
 
 model Availability {
-  userId       Int
+  sellerId       Int
   from         DateTime
   to           DateTime
   pricePerHour Int      @default(0)
 
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 
-  @@id([userId, from, to])
+  @@id([sellerId, from, to])
+}
+
+model Booking {
+  id              Int           @id @default(autoincrement())
+  sellerId          Int
+  from            DateTime
+  to              DateTime
+  pricePerHour    Int           @default(0)
+  status          BookingStatus
+  stripeSessionId String?       @unique
+
+  user User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 }
 
 enum BookingStatus {
@@ -64,16 +90,4 @@ enum BookingStatus {
   CONFIRMED
   CANCELLED
   REFUNDED
-}
-
-model Booking {
-  id              Int           @id @default(autoincrement())
-  userId          Int
-  from            DateTime
-  to              DateTime
-  pricePerHour    Int           @default(0)
-  status          BookingStatus
-  stripeSessionId String?       @unique
-
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
