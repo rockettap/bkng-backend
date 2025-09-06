@@ -111,7 +111,7 @@ export class BookingService {
     await this.reminderService.scheduleReminder(
       {
         bookingId: booking.id,
-        sellerEmail: email,
+        email: email,
         from: booking.from,
         to: booking.to,
       },
