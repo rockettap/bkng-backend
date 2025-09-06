@@ -29,7 +29,7 @@ model User {
 
 model EmailAuthMethod {
   id           Int    @id @default(autoincrement())
-  sellerId       Int    @unique
+  sellerId     Int    @unique
   email        String @unique
   passwordHash String
 
@@ -38,7 +38,7 @@ model EmailAuthMethod {
 
 model GoogleAuthMethod {
   id       Int    @id @default(autoincrement())
-  sellerId   Int    @unique
+  sellerId Int    @unique
   googleId String @unique
 
   user User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
@@ -46,7 +46,7 @@ model GoogleAuthMethod {
 
 model GoogleCalendarIntegration {
   id           Int     @id @default(autoincrement())
-  sellerId       Int     @unique
+  sellerId     Int     @unique
   accessToken  String
   refreshToken String?
 
@@ -55,7 +55,7 @@ model GoogleCalendarIntegration {
 
 model AppleCalendarIntegration {
   id       Int    @id @default(autoincrement())
-  sellerId   Int    @unique
+  sellerId Int    @unique
   username String
   password String
 
@@ -63,7 +63,7 @@ model AppleCalendarIntegration {
 }
 
 model Availability {
-  sellerId       Int
+  sellerId     Int
   from         DateTime
   to           DateTime
   pricePerHour Int      @default(0)
@@ -75,7 +75,7 @@ model Availability {
 
 model Booking {
   id              Int           @id @default(autoincrement())
-  sellerId          Int
+  sellerId        Int
   from            DateTime
   to              DateTime
   pricePerHour    Int           @default(0)
