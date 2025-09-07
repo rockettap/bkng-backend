@@ -76,7 +76,9 @@ export class BookingService {
       await this.bookingRepository.update(booking);
 
       return session.url!;
-    } catch {
+    } catch (error) {
+      console.log(error);
+
       booking.cancel();
       await this.bookingRepository.update(booking);
 

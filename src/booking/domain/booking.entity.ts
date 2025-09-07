@@ -17,6 +17,10 @@ export class Booking {
     if (this.from.getTime() < Date.now() + MINIMUM_ADVANCE_TIME_MS) {
       throw new DomainError('Bookings must be at least 5 minutes in advance.');
     }
+
+    if (pricePerHour < 100) {
+      throw new DomainError('Price must be at least 100 UAH.');
+    }
   }
 
   get from(): Date {
