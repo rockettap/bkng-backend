@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { BookingService } from 'src/booking/application/booking.service';
 import { Booking } from 'src/booking/domain/booking.entity';
 import { SellerService } from 'src/seller/application/seller.service';
@@ -8,13 +9,16 @@ import Stripe from 'stripe';
 @Injectable()
 export class StripeService {
   private readonly logger = new Logger(StripeService.name);
-  private readonly stripe = new Stripe(process.env.STRIPE_SECRET!);
+  private readonly stripe: Stripe;
 
   constructor(
     @Inject(forwardRef(() => BookingService))
     private readonly bookingService: BookingService,
     private readonly usersService: SellerService,
-  ) {}
+    private readonly config: ConfigService,
+  ) {
+    this.stripe = new Stripe(this.config.getOrThrow<string>('STRIPE_SECRET'));
+  }
 
   async createAccountLink(userId: number) {
     const user = await this.usersService.findByIdOrThrow(userId);
@@ -159,7 +163,7 @@ export class StripeService {
     return this.stripe.webhooks.constructEvent(
       rawBody,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!,
+      this.config.getOrThrow<string>('STRIPE_WEBHOOK_SECRET'),
     );
   }
 }
