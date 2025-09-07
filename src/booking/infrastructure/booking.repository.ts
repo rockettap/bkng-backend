@@ -78,7 +78,7 @@ export class PrismaBookingRepository implements BookingRepository {
       booking.pricePerHour,
       this.mapStatus(booking.status),
       booking.stripeSessionId ?? undefined,
-      booking.meetUrl?? undefined,
+      booking.meetUrl ?? undefined,
       booking.id,
     );
   }
