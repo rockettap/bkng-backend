@@ -26,7 +26,7 @@ export class BookingPaymentHandler implements PaymentHandler<Booking> {
     await this.reminderService.scheduleReminder(
       {
         bookingId: booking.id,
-        sellerEmail: email.value,
+        email: email.value,
         from: booking.from,
         to: booking.to,
       },

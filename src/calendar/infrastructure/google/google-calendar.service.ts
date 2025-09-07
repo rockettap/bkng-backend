@@ -1,6 +1,8 @@
 import { Inject, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Auth, google } from 'googleapis';
+import { BOOKING_REPOSITORY } from 'src/booking/application/tokens';
+import { BookingRepository } from 'src/booking/domain/booking-repository.interface';
 import { Booking } from 'src/booking/domain/booking.entity';
 import { Email } from 'src/seller/domain/value-objects/email.vo';
 import { GOOGLE_CALENDAR_INTEGRATION_REPOSITORY } from '../../application/tokens';
@@ -15,6 +17,9 @@ export class GoogleCalendarService implements CalendarService {
     private readonly config: ConfigService,
     @Inject(GOOGLE_CALENDAR_INTEGRATION_REPOSITORY)
     private readonly googleCalendarIntegrationRepository: GoogleCalendarIntegrationRepository,
+
+    @Inject(BOOKING_REPOSITORY)
+    private readonly bookingRepository: BookingRepository,
   ) {}
 
   async createEvent(booking: Booking, email?: Email): Promise<void> {
@@ -49,12 +54,21 @@ export class GoogleCalendarService implements CalendarService {
       },
     };
 
-    await calendar.events.insert({
+    const response = await calendar.events.insert({
       calendarId: 'primary',
       requestBody: event,
       conferenceDataVersion: 1,
       sendUpdates: 'none',
     });
+
+    const meetLink = response.data.conferenceData?.entryPoints?.find(
+      (e) => e.entryPointType === 'video',
+    )?.uri;
+
+    if (meetLink) {
+      booking.meetUrl = meetLink;
+      await this.bookingRepository.update(booking);
+    }
   }
 
   private async getOAuth2Client(sellerId: number): Promise<{

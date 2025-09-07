@@ -80,6 +80,7 @@ model Booking {
   to              DateTime
   pricePerHour    Int           @default(0)
   status          BookingStatus
+  meetUrl         String?
   stripeSessionId String?       @unique
 
   user User @relation(fields: [sellerId], references: [id], onDelete: Cascade)

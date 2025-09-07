@@ -1,7 +1,8 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
 import { AuthModule } from 'src/auth/auth.module';
+import { BookingModule } from 'src/booking/booking.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { SellerModule } from 'src/seller/seller.module';
 import { CalendarOrchestrator } from './application/calendar.orchestrator';
@@ -21,6 +22,7 @@ import { GoogleCalendarService } from './infrastructure/google/google-calendar.s
     SellerModule,
     PrismaModule,
     AuthModule,
+    forwardRef(() => BookingModule),
     ConfigModule.forRoot({
       validationSchema: Joi.object({
         GOOGLE_CLIENT_ID: Joi.string().required(),

@@ -9,6 +9,7 @@ export class Booking {
     public readonly pricePerHour: number,
     private _status: BookingStatus = BookingStatus.PENDING,
     public stripeSessionId?: string,
+    public meetUrl?: string,
     public readonly id: number = 0,
   ) {
     const MINIMUM_ADVANCE_TIME_MS = 5 * 60 * 1000; // 5 minutes

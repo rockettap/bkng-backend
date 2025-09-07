@@ -27,6 +27,6 @@ import { ReminderModule } from './reminder/reminder.module';
     },
   ],
   controllers: [BookingController],
-  exports: [BookingService],
+  exports: [BookingService, BOOKING_REPOSITORY],
 })
 export class BookingModule {}
