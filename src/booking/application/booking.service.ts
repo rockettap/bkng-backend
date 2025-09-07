@@ -116,6 +116,7 @@ export class BookingService {
         email: email,
         from: booking.from,
         to: booking.to,
+        meetLink: booking.meetUrl,
       },
       msUntilStart,
     );

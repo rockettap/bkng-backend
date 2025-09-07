@@ -13,13 +13,14 @@ export class ReminderConsumer extends WorkerHost {
   }
 
   async process(job: Job<ReminderJob, any, string>): Promise<any> {
-    const { email, from, to } = job.data;
+    const { email, from, to, meetLink } = job.data;
 
     this.logger.debug(job.data);
 
     const html = this.mailService.renderTemplate('reminder-mail', {
       from: this.formatDate(new Date(from)),
       to: this.formatDate(new Date(to)),
+      meetlink: meetLink,
     });
 
     try {

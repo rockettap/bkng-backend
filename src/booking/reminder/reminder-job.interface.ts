@@ -3,4 +3,5 @@ export interface ReminderJob {
   email: string;
   from: Date;
   to: Date;
+  meetLink?: string;
 }
